@@ -42,7 +42,7 @@ def getSpotTracks():
         print("Can't get token for " + username)
         sys.exit()
 
-    playlist_name = ConfigSectionMap("General")['playlist_name']
+    playlist_name = ConfigSectionMap("GENERAL")['playlist_name']
 
     playlists = sp.user_playlists(username)
 
@@ -62,7 +62,7 @@ def getSpotTracks():
     x = 0
     for track in tracks['tracks']['items']:
         track_data.append([])           #adds a new row in 2d array/list
-        #pp.pprint(track['track'])        
+        #pp.pprint(track['track'])
         #artist, album, track
         track_artist = track['track']['artists'][0]['name']
         track_album = track['track']['album']['name']
@@ -71,12 +71,12 @@ def getSpotTracks():
         track_data[x].append(track_album)
         track_data[x].append(track_name)
         x+=1
-    
+
     return track_data
-    
+
 def main():
     track_data = getSpotTracks()
-    
+
     ### TESTING ###
     print(track_data[0][0]) #[0] artist
     print(track_data[0][1]) #[0] album
