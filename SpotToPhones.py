@@ -89,10 +89,16 @@ def checkHeadphones(track_data):
         spArtist = track_data[x]['Artist']
         spAlbum = track_data[x]['Album']
         spTrack = track_data[x]['Track']
-
+        
         #search for artists in Headphones library, in future check getWanted also
         # could mean that album is already in queue, might be non-issue
+        print(len(hp_index[0]))
+        pp.pprint(hp_index)
+########################################## LEN is returning 0 
+########################################## hp_index is probably empty
+########################################## could be due to empty libray. needs testing
         for x in range(0,len(hp_index)):
+            print("index loop started\n")
             if hp_index[x]['ArtistName'] == spArtist:
                 hp_artist_id = hp_index[x]['ArtistID']
 
@@ -109,7 +115,6 @@ def checkHeadphones(track_data):
                         for x in range(0,len(hp_tracks)):
                             if hp_tracks['tracks'][x]['TrackTitle'] == spTrack:
                                 hp_track_test = "found"
-                                break
                             else:
                                 hp_track_test = "notfound"
                                 #have artist and incomplete album
@@ -120,11 +125,14 @@ def checkHeadphones(track_data):
                         hp_track_test = "notfound"
             else:
                 hp_artist_id = getMusicbrainzArtistID(spArtist)
-                hp_album_id = getMusicbrainzAlbumID(spAlbum, hp_artist_id)
+                hp_album_id = getMusicbrainzAlbumID(hp_artist_id, spAlbum)
                 hp_track_test = "notfound"
+####UnboundLocalError: local variable 'hp_artist_id' referenced before assignment                
+        print("does this loop?")
         track_data[x]['Artist ID'] = hp_artist_id
         track_data[x]['Album ID'] = hp_album_id
         track_data[x]['Track Test'] = hp_track_test
+        #pp.pprint(track_data[x]['Artist ID'])
     return track_data
 
 def queueAlbum(hp_track_data):    #in headphones
@@ -139,20 +147,32 @@ def queueAlbum(hp_track_data):    #in headphones
             callHeadphones(hp_query)
             #queueAlbum&id=$albumid[&new=True&lossless=True]
 def getMusicbrainzArtistID(sp_artist_name):
+    #find a way to incorporate track_data here, add 'ArtistID'. or a func to do it
     hp_query = 'findArtist&name=' + sp_artist_name + '&limit=3'
     artistQuery = callHeadphones(hp_query)
     for artist in artistQuery:
         if artist['score'] == 100: #cannot reliably verify artist name matches
             hp_artist_id = artist['id']
             break
+        else:
+            pass
+            #did not find artist
+            #find a way to flag it so queueAlbum does not remove from playlist
     return hp_artist_id
-def getMusicbrainzAlbumID(sp_album_name, hp_artist_id):
-    #only need albumID to queue but want to verify with artistID
-    #findAlbum&name=$albumname[&limit=$limit]
+    
+def getMusicbrainzAlbumID(hp_artist_id, sp_album_name):
+    #find a way to incorporate track_data dict here  or a func to do it
     hp_query = 'findAlbum&name=' + sp_album_name + '&limit=3'
     albumQuery = callHeadphones(hp_query)
-    #loop through return list
-    #match 'id' (artist) and return 'albumid'
+    for album in albumQuery:
+       if album['uniquename'] == sp_album_name and album['id'] == hp_artist_id:
+           hp_album_id = album['albumid']
+           break
+       else:
+           pass
+           #did not find album
+           #find a way to flag it so queueAlbum does not remove from playlist
+    return hp_album_id
 def remFromSpotPlaylist():
     print("todo")
 
@@ -162,15 +182,13 @@ def main():
 #    queueAlbum(hp_track_data)
 
     ### TESTING ###
-    pp.pprint(hp_track_data)
+    #pp.pprint(hp_track_data)
     print(sp_track_data[0]['Artist']) #[0] artist
+    print(hp_track_data[0]['Artist ID'])
     print(sp_track_data[0]['Album']) #[0] album
+    print(hp_track_data[0]['Album ID'])
     print(sp_track_data[0]['Track']) #[0] track
-    print(sp_track_data[1]['Artist'])
-    print(sp_track_data[1]['Album'])
-    print(sp_track_data[1]['Track'])
-    print(sp_track_data[2]['Artist'])
-    print(sp_track_data[2]['Album'])
-    print(sp_track_data[2]['Track'])
+    print(hp_track_data[0]['Track Test'])
+
 
 main()
