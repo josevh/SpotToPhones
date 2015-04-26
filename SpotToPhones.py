@@ -30,7 +30,6 @@ def ConfigSectionMap(section):
     return dict1
 
 def getSpotTracks():
-    print("x_ getSpotTracks() starts\n")
     app_scope = ConfigSectionMap("SPOTIPY")['scope']
     username = ConfigSectionMap("SPOTIPY")['user']
     token = util.prompt_for_user_token(username,
@@ -52,7 +51,6 @@ def getSpotTracks():
     track_data.append([])
 
     playlists = sp.user_playlists(username)
-    pp.pprint(playlists)
 
     for playlist in playlists['items']:
         print("x_ playlistname: " + playlist_name)
@@ -85,7 +83,6 @@ def getSpotTracks():
     print("end of getSpotTracks")
 
 def main():
-    print("x_ main() starts\n")
     getSpotTracks()
 
 
