@@ -90,70 +90,91 @@ def callHeadphones(cmd):
 def checkHeadphones(track_data):
     #search for tracks/albums/artists in Headphones libray
     hp_index = callHeadphones('getIndex')
+    hp_track_data = []
     for x in range(0,len(track_data)):
+        hp_track_data.append([])           #adds a new row in 2d array/list
         spArtist = track_data[x][0]
         spAlbum = track_data[x][1]
         spTrack = track_data[x][2]
+
+        #search for artists in Headphones library, in future check getWanted also
+        # could mean that album is already in queue, might be non-issue
         for x in range(0,len(hp_index)):
             if hp_index[x]['ArtistName'] == spArtist:
                 hp_artist_id = hp_index[x]['ArtistID']
+
+                #search for albums in Headphones library
+                hp_query = 'getArtist&id=' + hp_artist_id
+                hp_albums = callHeadphones(hp_query)
+                for x in range(0,len(hp_albums)):
+                    if hp_albums['albums'][x]['AlbumTitle'] == spAlbum:
+                        hp_album_id = hp_albums['albums'][x]['AlbumID']
+
+                        #search for track if Album in library
+                        hp_query = 'getAlbum&id=' + hp_track_album_id
+                        hp_tracks = callHeadphones(hp_query)
+                        for x in range(0,len(hp_tracks)):
+                            if hp_tracks['tracks'][x]['TrackTitle'] == spTrack:
+                                hp_track_test = "found"
+                                break
+                            else:
+                                hp_track_test = "notfound"
+                                #have artist and incomplete album
+                                #redownload? investigate further how Headphones handles
+                                #could be an issue in deluxe album vs reg
+                    else:
+                        hp_album_id = getMusicbrainzAlbumID(spAlbum, hp_artist_id)
+                        hp_track_test = "notfound"
             else:
-                hp_artist_id = "notfound"
-                #need to query musicbrainz for artistid
-                #and query for the album id and add to wanted
-                #and end this function, do not search for
-                #albums and tracks since artist is not in library
-                break
-        #search for albums in Headphones library
-        hp_query = 'getArtist&id=' + hp_artist_id
-        hp_albums = callHeadphones(hp_query)
-        for x in range(0,len(hp_albums)):
-            if hp_albums['albums'][x]['AlbumTitle'] == spAlbum:
-                hp_album_id = hp_albums['albums'][x]['AlbumID']
-            else:
-                hp_album_id = "notfound"
-                #do stuff
-                break
-        #search for track if Album in library
-        hp_query = 'getAlbum&id=' + hp_track_album_id
-        hp_tracks = callHeadphones(hp_query)
-        for x in range(0,len(hp_tracks)):
-            if hp_tracks['tracks'][x]['TrackTitle'] == spTrack:
-                #have the artist, album, date
-                #do not queue, remove from spotify playlist
-                break
-            else:
-                #have artist and incomplete album
-                #redownload? investigate further
-                #could be an issue in deluxe album vs normal
-                break
+                hp_artist_id = getMusicbrainzArtistID(spArtist)
+                hp_album_id = getMusicbrainzAlbumID(spAlbum, hp_artist_id)
+                hp_track_test = "notfound"
+        hp_track_data[x].append(hp_artist_id)
+        hp_track_data[x].append(hp_album_id)
+        hp_track_data[x].append(hp_track_test)
+    return hp_track_data
 
-
-    #return an array with artistid and albumid to add to headphones
-
-def queueAlbum(artist_id, album_id):    #in headphones
+def queueAlbum(hp_track_data):    #in headphones
+    for x in range(0,len(hp_track_data)):
+        y = 3 * (x + 1)
+        if hp_track_data[x][y] == "found":
+            remFromSpotPlaylist()
+            #alredy have artist, album, track. End.
+            #remove from playlist, do not queue
+        else:
+            hp_query = '#queueAlbum&id=' + hp_track_data[x][2]
+            callHeadphones(hp_query)
+            #queueAlbum&id=$albumid[&new=True&lossless=True]
+def getMusicbrainzArtistID(sp_artist_name):
+    hp_query = 'findArtist&name=' + sp_artist_name + '&limit=25'
+    artistQuery = callHeadphones(hp_query)
+    #loop through list
+    #match 'name'
+    #return 'id' (artist)
+def getMusicbrainzAlbumID(sp_album_name, hp_artist_id):
+    #only need albumID to queue but want to verify with artistID
+    #findAlbum&name=$albumname[&limit=$limit]
+    hp_query = 'findAlbum&name=' + sp_album_name + '&limit=25'
+    albumQuery = callHeadphones(hp_query)
+    #loop through return list
+    #match 'id' (artist) and return 'albumid'
+def remFromSpotPlaylist():
     print("todo")
-def getMusicbrainzArtistID():
-    print("todo")
-    #findArtist&name=$artistname[&limit=$limit]
-    #returns artist id
-def getMusicbrainzAlbumID():
-    print("todo")
-
 
 def main():
-    track_data = getSpotTracks()
-    checkHeadphones(track_data)
+    sp_track_data = getSpotTracks()
+    hp_track_data = checkHeadphones(sp_track_data)
+    queueAlbum(hp_track_data)
 
     ### TESTING ###
-    print(track_data[0][0]) #[0] artist
-    print(track_data[0][1]) #[0] album
-    print(track_data[0][2]) #[0] track
-    print(track_data[1][0])
-    print(track_data[1][1])
-    print(track_data[1][2])
-    print(track_data[2][0])
-    print(track_data[2][1])
-    print(track_data[2][2])
+    print(sp_track_data[0][0]) #[0] artist
+    print(sp_track_data[0][1]) #[0] album
+    print(sp_track_data[0][2]) #[0] track
+    print(sp_track_data[1][0])
+    print(sp_track_data[1][1])
+    print(sp_track_data[1][2])
+    print(sp_track_data[2][0])
+    print(sp_track_data[2][1])
+    print(sp_track_data[2][2])
 
 main()
