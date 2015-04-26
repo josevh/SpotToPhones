@@ -14,3 +14,6 @@ Open to any suggestions. First real GitHub project for me.
 Forgive the sloppy code, still learning.
 
 Thanks for reading!
+
+REQUIREMENTS:
+SPOTIPY and REQUESTS
