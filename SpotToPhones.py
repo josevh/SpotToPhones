@@ -13,6 +13,7 @@ Config = ConfigParser.ConfigParser()
 Config.read("config.ini")
 logging.basicConfig(filename='SpotToPhones.log',level=logging.DEBUG)
 pp = pprint.PrettyPrinter(indent=4, depth=2)
+playlist_data = []
 
 def ConfigSectionMap(section):
     dict1 = {}
@@ -26,29 +27,36 @@ def ConfigSectionMap(section):
             print("exception on %s!" % option)
             dict1[option] = None
     return dict1
-
-def getSpotTracks():
+    
+def callSpotify(): 
     app_scope = ConfigSectionMap("SPOTIPY")['scope']
     username = ConfigSectionMap("SPOTIPY")['user']
     token = util.prompt_for_user_token(username, scope=app_scope,
-        client_id=ConfigSectionMap("SPOTIPY")['spotipy_client_id'],
-        client_secret=ConfigSectionMap("SPOTIPY")['spotipy_client_secret'],
-        redirect_uri=ConfigSectionMap("SPOTIPY")['spotipy_redirect_uri'])
-
+    client_id=ConfigSectionMap("SPOTIPY")['spotipy_client_id'],
+    client_secret=ConfigSectionMap("SPOTIPY")['spotipy_client_secret'],
+    redirect_uri=ConfigSectionMap("SPOTIPY")['spotipy_redirect_uri'])
+    
     if token:
         sp = spotipy.Spotify(auth=token)
-        playlists = sp.user_playlists(username)
+        return sp
     else:
         print("Can't get token for " + username)
         sys.exit()
 
-    playlist_name = ConfigSectionMap("GENERAL")['playlist_name']
-
+def getSpotTracks(sp):
+    
+    username = ConfigSectionMap("SPOTIPY")['user']
     playlists = sp.user_playlists(username)
-
+    playlist_name = ConfigSectionMap("GENERAL")['playlist_name']
+    
     playlist_found_test = 0
     for playlist in playlists['items']:
         if playlist['name'] == playlist_name:
+            pdata = {
+                'Playlist Name': playlist_name,
+                'Playlist ID': playlist['id']
+                }
+            playlist_data.append(pdata)
             tracks = sp.user_playlist(username, playlist['id'], fields="tracks")
             playlist_found_test = 1
             break
@@ -60,16 +68,18 @@ def getSpotTracks():
     track_data = []
 
     for track in tracks['tracks']['items']:
-        #pp.pprint(track['track'])
-        #artist, album, track
-        data = {'Artist': track['track']['artists'][0]['name'],
+        data = {
+            'Artist': track['track']['artists'][0]['name'],
             'Album': track['track']['album']['name'],
-            'Track': track['track']['name']}
+            'Track': track['track']['name'],
+            'URI': track['track']['uri'],
+            }
         track_data.append(data)
 
     return track_data
 
 def callHeadphones(cmd):
+    #assignment could be optimized
     hp_user = ConfigSectionMap("HEADPHONES")['user']
     hp_pass = ConfigSectionMap("HEADPHONES")['password']
     hp_ip = ConfigSectionMap("HEADPHONES")['ip']
@@ -132,20 +142,8 @@ def checkHeadphones(track_data):
             track_data[i]['Album ID'] = hp_album_id
             track_data[i]['Track Test'] = hp_track_test
     return track_data
-
-def queueAlbum(hp_track_data):    #in headphones
-    for x in range(0,len(hp_track_data)):
-        if hp_track_data[x]['TrackTest'] == "found":
-            remFromSpotPlaylist()
-            #alredy have artist, album, track. End.
-            #remove from playlist, do not queue
-        #elif hp_track_data[x]['notfound']
-        else:
-            hp_query = '#queueAlbum&id=' + hp_track_data[x][2]
-            callHeadphones(hp_query)
-            #queueAlbum&id=$albumid[&new=True&lossless=True]
+            
 def getMusicbrainzArtistID(sp_artist_name):
-    #find a way to incorporate track_data here, add 'ArtistID'. or a func to do it
     hp_artist_id = ''
     hp_query = 'findArtist&name=' + sp_artist_name + '&limit=10'
     count = 0
@@ -167,7 +165,6 @@ def getMusicbrainzArtistID(sp_artist_name):
     return hp_artist_id
 
 def getMusicbrainzAlbumID(hp_artist_id, sp_album_name):
-    #find a way to incorporate track_data dict here  or a func to do it
     hp_album_id = ''
     hp_query = 'findAlbum&name=' + sp_album_name #+ '&limit=10'
     count = 0
@@ -188,37 +185,64 @@ def getMusicbrainzAlbumID(hp_artist_id, sp_album_name):
            else:
                hp_album_id = "notfound"
     return hp_album_id
+    
+def queueAlbum(hp_track_data, sp):    #in headphones
+    remTracks = []
+    for x in range(0,len(hp_track_data)):
+        if hp_track_data[x]['TrackTest'] == "found":
+            data = { "uri": hp_track_data[0]['URI'] }
+            remTracks.append(data)
+            #already have artist, album, track. End.
+            #remove from playlist, do not queue
+        elif hp_track_data[x]['Artist ID'] == "notfound" or hp_track_data[x]['Album ID'] == "notfound":
+            pass
+            #do nothing
+            #could not locate artist id or album id on musicbrainz, try again next time
+            #or will have to be done manually
+        else:
+            hp_query = '#queueAlbum&id=' + hp_track_data[x]['Album ID']
+            callHeadphones(hp_query)  
+    remFromSpotPlaylist(sp, remTracks)
 
-def remFromSpotPlaylist():
-    print("todo")
+def remFromSpotPlaylist(sp, tracks):
+    username = ConfigSectionMap("SPOTIPY")['user']
+    playlist_id = playlist_data[0]['Playlist ID']
+    remCommand = user_playlist_remove_all_occurrences_of_tracks(username,playlist_id,tracks)
+    #user_playlist_remove_all_occurrences_of_tracks(user, playlist_id, tracks, snapshot_id=None)
 
 def main():
-    sp_track_data = getSpotTracks()
-    hp_track_data = checkHeadphones(sp_track_data)
-#    queueAlbum(hp_track_data)
-#    queueAlbum(hp_track_data)
+    sp = callSpotify()
+    track_data = getSpotTracks(sp)
+    track_data = checkHeadphones(track_data)
+#    queueAlbum(hp_track_data, sp)
 
     ### TESTING ###
     #pp.pprint(hp_track_data)
-    print(sp_track_data[0]['Artist']) #[0] artist
-    print(hp_track_data[0]['Artist ID'])
-    print(sp_track_data[0]['Album']) #[0] album
-    print(hp_track_data[0]['Album ID'])
-    print(sp_track_data[0]['Track']) #[0] track
-    print(hp_track_data[0]['Track Test'])
+    print(playlist_data[0]['Playlist Name'])
+    print(playlist_data[0]['Playlist ID'])
     print("")
-    print(sp_track_data[1]['Artist']) #[0] artist
-    print(hp_track_data[1]['Artist ID'])
-    print(sp_track_data[1]['Album']) #[0] album
-    print(hp_track_data[1]['Album ID'])
-    print(sp_track_data[1]['Track']) #[0] track
-    print(hp_track_data[1]['Track Test'])
+    print(track_data[0]['Artist']) #[0] artist
+    print(track_data[0]['Artist ID'])
+    print(track_data[0]['Album']) #[0] album
+    print(track_data[0]['Album ID'])
+    print(track_data[0]['Track']) #[0] track
+    print(track_data[0]['Track Test'])
+    print(track_data[0]['URI'])
     print("")
-    print(sp_track_data[2]['Artist']) #[0] artist
-    print(hp_track_data[2]['Artist ID'])
-    print(sp_track_data[2]['Album']) #[0] album
-    print(hp_track_data[2]['Album ID'])
-    print(sp_track_data[2]['Track']) #[0] track
-    print(hp_track_data[2]['Track Test'])
+    print(track_data[1]['Artist']) #[0] artist
+    print(track_data[1]['Artist ID'])
+    print(track_data[1]['Album']) #[0] album
+    print(track_data[1]['Album ID'])
+    print(track_data[1]['Track']) #[0] track
+    print(track_data[1]['Track Test'])
+    print(track_data[1]['URI'])
+    print("")
+    print(track_data[2]['Artist']) #[0] artist
+    print(track_data[2]['Artist ID'])
+    print(track_data[2]['Album']) #[0] album
+    print(track_data[2]['Album ID'])
+    print(track_data[2]['Track']) #[0] track
+    print(track_data[2]['Track Test'])
+    print(track_data[2]['URI'])
 
 main()
