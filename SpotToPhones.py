@@ -109,11 +109,15 @@ def checkHeadphones(track_data):
                             for l in range(0,len(hp_tracks['tracks'])):
                                 if hp_tracks['tracks'][l]['TrackTitle'] == spTrack:
                                     hp_track_test = "found"
+                                    print("it was found! ", spTrack)
+                                    break
                                 else:
                                     hp_track_test = "notfound"
+                            break
                         else:
                             hp_album_id = getMusicbrainzAlbumID(hp_artist_id, spAlbum)
                             hp_track_test = "notfound"
+                    break
                 else:
                     hp_artist_id = getMusicbrainzArtistID(spArtist)
                     hp_album_id = getMusicbrainzAlbumID(hp_artist_id, spAlbum)
