@@ -1,3 +1,6 @@
+#TODO:  1. use standard requests formart to form requests
+#       2. hold all headphones login info in object, remove duplicate code
+
 from __future__ import absolute_import
 from __future__ import print_function
 import ssl
@@ -91,6 +94,28 @@ def callHeadphones(cmd):
     result = requests.get(request)
     result = result.json()
     return result
+    
+def modHeadphones(cmd):
+    #assignment could be optimized
+    hp_user = ConfigSectionMap("HEADPHONES")['user']
+    hp_pass = ConfigSectionMap("HEADPHONES")['password']
+    hp_ip = ConfigSectionMap("HEADPHONES")['ip']
+    # hp_root = ""  #web_root not implemented
+    hp_port = ConfigSectionMap("HEADPHONES")['port']
+    hp_api_key = ConfigSectionMap("HEADPHONES")['api_key']
+    hp_api_url = "http://" + hp_ip + ":" + hp_port + "/api?apikey=" + hp_api_key + "&cmd="
+    request = hp_api_url + cmd
+    result = requests.post(request)
+    count = 0
+    while True:
+        result = requests.post(request)
+        print(count)
+        if result.text == 'OK':
+            break
+        if count > 1:
+            break
+        count += 1
+    return result.text
 
 def checkHeadphones(track_data):
     #search for tracks/albums/artists in Headphones libray
@@ -201,7 +226,10 @@ def queueAlbum(hp_track_data, sp):    #in headphones
             #or will have to be done manually
         else:
             hp_query = '#queueAlbum&id=' + hp_track_data[x]['Album ID']
-            callHeadphones(hp_query)  
+            queue = modHeadphones(hp_query)
+            if queue = 'OK':
+                data = { "uri": hp_track_data[0]['URI'] }
+                remTracks.append(data)  
     remFromSpotPlaylist(sp, remTracks)
 
 def remFromSpotPlaylist(sp, tracks):
