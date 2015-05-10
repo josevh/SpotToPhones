@@ -17,6 +17,8 @@ playlist_data = []
 
 
 def ConfigSectionMap(section):
+    '''Return vars from config.ini to a dict object
+    '''
     dict1 = {}
     options = Config.options(section)
     for option in options:
@@ -32,8 +34,9 @@ def ConfigSectionMap(section):
 ### HEADPHONES API URL
 hp_api = "http://" + ConfigSectionMap("HEADPHONES")['ip'] + ":" + ConfigSectionMap("HEADPHONES")['port'] +  ConfigSectionMap("HEADPHONES")['webroot'] + "/api"
 
-
 def callSpotify():
+    '''Get and return Auth Token from Spotify for API calls
+    '''
     app_scope = ConfigSectionMap("SPOTIPY")['scope']
     username = ConfigSectionMap("SPOTIPY")['user']
     token = util.prompt_for_user_token(username, scope=app_scope,
@@ -49,7 +52,9 @@ def callSpotify():
         sys.exit()
 
 def getSpotTracks(sp):
-
+    ''' Get playlist tracks' artist and album information
+    Returns a dict object with all tracks' information
+    '''
     username = ConfigSectionMap("SPOTIPY")['user']
     playlists = sp.user_playlists(username)
     playlist_name = ConfigSectionMap("GENERAL")['playlist_name']
@@ -94,6 +99,9 @@ def callHeadphones(req):
     return result
 
 def modHeadphones(req):
+    '''Handles POST calls to Headphones API
+    Returns response 'OK' if successful
+    '''
     global hp_api
     data = {'apikey': ConfigSectionMap("HEADPHONES")['api_key']}
     payload = {}
@@ -110,7 +118,10 @@ def modHeadphones(req):
     return result.text
 
 def checkHeadphones(track_data):
-    #search for tracks/albums/artists in Headphones libray
+    '''Calls Headphones API to check if tracks are present in library
+    Appends artist and/or album id's to track_data dict
+    If information is not found, will store string 'notfound'
+    '''
     req = {'cmd': 'getIndex'}
     hp_index = callHeadphones(req)
     for i in range(0,len(track_data)):
@@ -118,7 +129,6 @@ def checkHeadphones(track_data):
         spAlbum = track_data[i]['Album']
         spTrack = track_data[i]['Track']
         if hp_index: # check if Headphones library is empty
-
             # search for artist in library
             for j in range(0,len(hp_index)):
                 if hp_index[j]['ArtistName'] == spArtist:
@@ -162,6 +172,10 @@ def checkHeadphones(track_data):
     return track_data
 
 def getMusicbrainzArtistID(sp_artist_name):
+    '''Queries Headphone's API Musicbrainz query method to get Musicbrainz artist id
+    Returns Musicbrainz artist id
+    if unable to acquire, returns string 'notfound'
+    '''
     hp_artist_id = ''
     req = {'cmd': 'findArtist', 'name': sp_artist_name, 'limit': 10}
     count = 0
@@ -183,6 +197,10 @@ def getMusicbrainzArtistID(sp_artist_name):
     return hp_artist_id
 
 def getMusicbrainzAlbumID(hp_artist_id, sp_album_name):
+    '''Queries Headphone's API Musicbrainz query method to get Musicbrainz album id
+    Returns Musicbrainz album id
+    if unable to acquire, returns string 'notfound'
+    '''
     hp_album_id = ''
     req = {'cmd': 'findAlbum', 'name': sp_album_name}
     count = 0
@@ -205,7 +223,10 @@ def getMusicbrainzAlbumID(hp_artist_id, sp_album_name):
                hp_album_id = "notfound"
     return hp_album_id
 
-def queueAlbum(sp, hp_track_data):    #in headphones
+def queueAlbum(sp, hp_track_data):
+    '''Request tracks' album is downloaded by calling Headphones API
+    If artist id and/or album id is string 'notfound', does nothing 
+    '''
     remTracks = []
     for x in range(0,len(hp_track_data)):
         if hp_track_data[x]['Track Test'] == "found":
@@ -234,6 +255,8 @@ def queueAlbum(sp, hp_track_data):    #in headphones
     remFromSpotPlaylist(sp, remTracks)
 
 def remFromSpotPlaylist(sp, tracks):
+    '''Calls on Spotify API to remove track from playlist if download requested
+    '''
     username = ConfigSectionMap("SPOTIPY")['user']
     playlist_id = playlist_data[0]['Playlist ID']
     remCommand = sp.user_playlist_remove_all_occurrences_of_tracks(username,playlist_id,tracks)
@@ -245,6 +268,7 @@ def main():
     track_data = checkHeadphones(track_data)
     queueAlbum(sp, track_data)
 
+    '''
     ### TESTING ###
     #pp.pprint(hp_track_data)
     print(playlist_data[0]['Playlist Name'])
@@ -260,5 +284,5 @@ def main():
         print("Track Test: ", track_data[x]['Track Test'])
         print("Track URI: ", track_data[x]['URI'])
         print("")
-
+    '''
 main()
