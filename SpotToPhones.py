@@ -31,7 +31,8 @@ def ConfigSectionMap(section):
             dict1[option] = None
     return dict1
 
-### HEADPHONES API URL
+''' HEADPHONES API URL
+'''
 hp_api = "http://" + ConfigSectionMap("HEADPHONES")['ip'] + ":" + ConfigSectionMap("HEADPHONES")['port'] +  ConfigSectionMap("HEADPHONES")['webroot'] + "/api"
 
 def callSpotify():
