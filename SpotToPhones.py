@@ -52,7 +52,7 @@ def callSpotify():
         sys.exit()
 
 def getSpotTracks(sp):
-    ''' Get playlist tracks' artist and album information
+    '''Get playlist tracks' artist and album information
     Returns a dict object with all tracks' information
     '''
     username = ConfigSectionMap("SPOTIPY")['user']
@@ -90,7 +90,7 @@ def getSpotTracks(sp):
 
 def callHeadphones(req):
     global hp_api
-    data = {'apikey': ConfigSectionMap("HEADPHONES")['api_key']}
+    data = { 'apikey': ConfigSectionMap("HEADPHONES")['api_key'] }
     payload = {}
     for item in (data, req):
         payload.update(item)
@@ -134,14 +134,14 @@ def checkHeadphones(track_data):
                 if hp_index[j]['ArtistName'] == spArtist:
                     hp_artist_id = hp_index[j]['ArtistID']
 
-                    #search for albums in Headphones library
+                    # search for albums in Headphones library
                     req ={'cmd': 'getArtist', 'id': hp_artist_id}
                     hp_albums = callHeadphones(req)
                     for k in range(0,len(hp_albums['albums'])):
                         if hp_albums['albums'][k]['AlbumTitle'] == spAlbum:
                             hp_album_id = hp_albums['albums'][k]['AlbumID']
 
-                            #search for track, Album is in library
+                            # search for track, Album is in library
                             req = {'cmd': 'getAlbum', 'id': hp_album_id}
                             hp_tracks = callHeadphones(req)
                             for l in range(0,len(hp_tracks['tracks'])):
@@ -162,7 +162,7 @@ def checkHeadphones(track_data):
             track_data[i]['Artist ID'] = hp_artist_id
             track_data[i]['Album ID'] = hp_album_id
             track_data[i]['Track Test'] = hp_track_test
-        else: #headphones library is empty
+        else:   # headphones library is empty
             hp_artist_id = getMusicbrainzArtistID(spArtist)
             hp_album_id = getMusicbrainzAlbumID(hp_artist_id, spAlbum)
             hp_track_test = "notfound"
@@ -179,7 +179,7 @@ def getMusicbrainzArtistID(sp_artist_name):
     hp_artist_id = ''
     req = {'cmd': 'findArtist', 'name': sp_artist_name, 'limit': 10}
     count = 0
-    while True: #retry connection if failed, until successful or 5 tries
+    while True: # retry connection if failed, until successful or 5 tries
         count += 1
         artistQuery = callHeadphones(req)
         if isinstance(artistQuery, list):
@@ -189,7 +189,7 @@ def getMusicbrainzArtistID(sp_artist_name):
             break
     if hp_artist_id != "notfound":
         for artist in artistQuery:
-            if artist['score'] > 90: #cannot reliably verify artist name matches
+            if artist['score'] > 90:    # cannot reliably verify artist name matches
                 hp_artist_id = artist['id']
                 break
             else:
@@ -204,7 +204,7 @@ def getMusicbrainzAlbumID(hp_artist_id, sp_album_name):
     hp_album_id = ''
     req = {'cmd': 'findAlbum', 'name': sp_album_name}
     count = 0
-    while True: #retry connection if failed, until successful or 5 tries
+    while True: # retry connection if failed, until successful or 5 tries
         count += 1
         albumQuery = callHeadphones(req)
         if isinstance(albumQuery, list):
@@ -213,10 +213,8 @@ def getMusicbrainzAlbumID(hp_artist_id, sp_album_name):
             hp_album_id = "notfound"
             break
     if hp_album_id != "notfound":
-        # pp.pprint(albumQuery)
         for album in albumQuery:
            if album['id'] == hp_artist_id and album['title'] == sp_album_name:
-               #    hp_album_id = album['albumid']
                hp_album_id = album['rgid']  #Headphones prefers the release group id
                break
            else:
@@ -231,23 +229,22 @@ def queueAlbum(sp, hp_track_data):
     for x in range(0,len(hp_track_data)):
         if hp_track_data[x]['Track Test'] == "found":
             remTracks.append(hp_track_data[0]['URI'])
-            #already have artist, album, track. End.
-            #remove from playlist, do not queue
+            # already have artist, album, track. End.
+            # remove from playlist, do not queue
         elif hp_track_data[x]['Artist ID'] == "notfound" or hp_track_data[x]['Album ID'] == "notfound":
             pass
-            #do nothing
-            #could not locate artist id or album id on musicbrainz, try again next time
-            #or will have to be done manually
+            # could not locate artist id or album id on musicbrainz, try again next time
+            # or will have to be downloaded manually
         else:
-            #add artist to headphones db
+            # add artist to headphones db
             req = {'cmd': 'addArtist', 'id': hp_track_data[x]['Artist ID']}
             artistReq = modHeadphones(req)
             if artistReq == 'OK':
-                #add album to headphones db
+                # add album to headphones db
                 req = {'cmd': 'addAlbum', 'id': hp_track_data[x]['Album ID']}
                 albumReq = modHeadphones(req)
                 if albumReq == 'OK':
-                    #request album be downloaded
+                    # request album be downloaded
                     req = {'cmd': 'queueAlbum', 'id': hp_track_data[x]['Album ID']}
                     queue = modHeadphones(req)
                     if queue == 'OK':
@@ -255,12 +252,11 @@ def queueAlbum(sp, hp_track_data):
     remFromSpotPlaylist(sp, remTracks)
 
 def remFromSpotPlaylist(sp, tracks):
-    '''Calls on Spotify API to remove track from playlist if download requested
+    ''' Calls on Spotify API to remove track from playlist if download requested
     '''
     username = ConfigSectionMap("SPOTIPY")['user']
     playlist_id = playlist_data[0]['Playlist ID']
     remCommand = sp.user_playlist_remove_all_occurrences_of_tracks(username,playlist_id,tracks)
-    #user_playlist_remove_all_occurrences_of_tracks(user, playlist_id, tracks, snapshot_id=None)
 
 def main():
     sp = callSpotify()
