@@ -22,4 +22,7 @@ Forgive the sloppy code, still learning.
 Thanks for reading!
 
 <b>REQUIREMENTS:</b>
-SPOTIPY and REQUESTS
+<ol>
+  <li><a href="http://docs.python-requests.org/en/latest/user/install/">Spotipy</a></li>
+  <li><a href="http://spotipy.readthedocs.org/en/latest/#installation">Requests</a></li>
+</ol>
