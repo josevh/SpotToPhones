@@ -8,9 +8,14 @@
 <br><br>
 <b>Status:</b> <b>WIP</b>
 <ul>
-  <li>Functioning, sometimes fails to get musicbrainz id.</li>
+  <li>Functioning, needs improvement in getting artist id from Musicbrainz.</li>
 </ul>  
-
+<br>
+<b>Todo:</b>
+<ul>
+    <li>Move tracks that cannot be found on MBz to another playlist for cases in which manual download will be required.</li>
+</ul>
+<br>
 Open to any suggestions. First real GitHub project for me.
 Forgive the sloppy code, still learning.
 
