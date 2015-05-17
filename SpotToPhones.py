@@ -41,9 +41,9 @@ def callSpotify():
     app_scope = ConfigSectionMap("SPOTIPY")['scope']
     username = ConfigSectionMap("SPOTIPY")['user']
     token = util.prompt_for_user_token(username, scope=app_scope,
-    client_id=ConfigSectionMap("SPOTIPY")['spotipy_client_id'],
-    client_secret=ConfigSectionMap("SPOTIPY")['spotipy_client_secret'],
-    redirect_uri=ConfigSectionMap("SPOTIPY")['spotipy_redirect_uri'])
+    client_id=ConfigSectionMap("SPOTIPY")['spotify_client_id'],
+    client_secret=ConfigSectionMap("SPOTIPY")['spotify_client_secret'],
+    redirect_uri=ConfigSectionMap("SPOTIPY")['spotify_redirect_uri'])
 
     if token:
         sp = spotipy.Spotify(auth=token)
@@ -190,7 +190,9 @@ def getMusicbrainzArtistID(sp_artist_name):
             break
     if hp_artist_id != "notfound":
         for artist in artistQuery:
-            if artist['score'] > 90:    # cannot reliably verify artist name matches
+            # cannot reliably verify artist name matches
+            # probs: order of lname & fname; identically named artists with score 100, for ex. 'Lorde'
+            if artist['score'] > 90:    
                 hp_artist_id = artist['id']
                 break
             else:
@@ -203,7 +205,7 @@ def getMusicbrainzAlbumID(hp_artist_id, sp_album_name):
     if unable to acquire, returns string 'notfound'
     '''
     hp_album_id = ''
-    req = {'cmd': 'findAlbum', 'name': sp_album_name}
+    req = {'cmd': 'findAlbum', 'name': sp_album_name, 'limit': 15}
     count = 0
     while True: # retry connection if failed, until successful or 5 tries
         count += 1
@@ -215,7 +217,7 @@ def getMusicbrainzAlbumID(hp_artist_id, sp_album_name):
             break
     if hp_album_id != "notfound":
         for album in albumQuery:
-           if album['id'] == hp_artist_id and album['title'] == sp_album_name:
+           if album['id'] == hp_artist_id and (album['title']).lower() == (sp_album_name).lower():  #ignore case
                hp_album_id = album['rgid']  #Headphones prefers the release group id
                break
            else:
@@ -273,13 +275,13 @@ def main():
     print("")
 
     for x in range(0,len(track_data)):
-        print("Artist: ", track_data[x]['Artist']) #[0] artist
+        print("Artist: ", track_data[x]['Artist'])
         print("Artist ID: ", track_data[x]['Artist ID'])
-        print("Album: ", track_data[x]['Album']) #[0] album
+        print("Album: ", track_data[x]['Album'])
         print("Album ID: ", track_data[x]['Album ID'])
-        print("Track: ", track_data[x]['Track']) #[0] track
+        print("Track: ", track_data[x]['Track'])
         print("Track Test: ", track_data[x]['Track Test'])
         print("Track URI: ", track_data[x]['URI'])
         print("")
-    '''
+    '''    
 main()

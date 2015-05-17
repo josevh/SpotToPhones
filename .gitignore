@@ -2,3 +2,7 @@
 SpotToPhones.log
 HPhonesAPI.py
 *.cache-overthinkingkme
+
+dev/APITest.py
+dev/config.ini
+dev/return.txt
