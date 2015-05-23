@@ -1,7 +1,6 @@
 *.cache-overthinkingme
 SpotToPhones.log
 HPhonesAPI.py
-*.cache-overthinkingkme
 
 dev/APITest.py
 dev/config.ini
