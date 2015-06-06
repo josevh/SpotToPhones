@@ -60,7 +60,7 @@ def getSpotTracks(sp):
     playlists = sp.user_playlists(username)
     playlist_name = ConfigSectionMap("GENERAL")['wanted_playlist']
 
-    playlist_found_test = 0
+    wanted_playlist_found_test = 0
     playlist_found_count = 0
     for playlist in playlists['items']:
         #Get playlist id's of all our playlists in one go
@@ -86,11 +86,11 @@ def getSpotTracks(sp):
             playlist_data.append(pdata)
             playlist_found_count += 1
             tracks = sp.user_playlist(username, playlist['id'], fields="tracks")
-            playlist_found_test = 1
+            wanted_playlist_found_test = 1
         if playlist_found_count >= 3: #dup playlist names allowed?
             break
         
-    if playlist_found_test == 0:
+    if wanted_playlist_found_test == 0:
         logging.debug("Did not find playlist.")
         sys.exit()
 
