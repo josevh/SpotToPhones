@@ -62,12 +62,25 @@ def getSpotTracks(sp):
 
     playlist_found_test = 0
     for playlist in playlists['items']:
+        #Get playlist id's of all our playlists in one go
         if playlist['name'] == playlist_name:
             pdata = {
-                'Playlist Name': playlist_name,
-                'Playlist ID': playlist['id']
+                'Wanted Playlist Name': playlist_name,
+                'Wanted Playlist ID': playlist['id']
+                }
+        if playlist['name'] == ConfigSectionMap("GENERAL")['error_playlist']:
+            pdata1 = {
+                'Error Playlist Name': ConfigSectionMap("GENERAL")['error_playlist'],
+                'Error Playlist ID': playlist['id']
+                }
+        if playlist['name'] == ConfigSectionMap("GENERAL")['wanted_playlist']:
+            pdata2 = {
+                'Snatched Playlist Name': ConfigSectionMap("GENERAL")['snatched_playlist'],
+                'Snatched Playlist ID': playlist['id']
                 }
             playlist_data.append(pdata)
+            playlist_data.append(pdata1)
+            playlist_data.append(pdata2)
             tracks = sp.user_playlist(username, playlist['id'], fields="tracks")
             playlist_found_test = 1
             break
@@ -258,48 +271,44 @@ def remFromSpotPlaylist(sp, tracks):
     ''' Calls on Spotify API to remove track from playlist if download requested
     '''
     username = ConfigSectionMap("SPOTIPY")['user']
-    playlist_id = playlist_data[0]['Playlist ID']
+    playlist_id = playlist_data[0]['Wanted Playlist ID']
     remCall = sp.user_playlist_remove_all_occurrences_of_tracks(username,playlist_id,tracks)
 
-def toSpotPlaylist(sp, playlist, tracks):
+def toSpotPlaylist(sp, playlist_id, tracks):
     #   results = sp.user_playlist_add_tracks(username, playlist_id, track_ids)
     #   doc: user_playlist_add_tracks(user, playlist_id, tracks, position=None)
     #   tracks is a LIST of track id's
     username = ConfigSectionMap("SPOTIPY")['user']
-    playlists = sp.user_playlists(username)
-    for pl in playlists['items']:
-        if pl['name'] == playlist_name:
-            pl_id = pl['id']
-    addCall = sp.user_playlist_add_tracks(username, pl_id, tracks)
+    addCall = sp.user_playlist_add_tracks(username, playlist_id, tracks)
     
-def toErrorPL():
+def toErrorPL(sp, track_data):
     ''' Albums which were not matched successfully and/or not queued
         will be moved to a new playlist
     '''
-    error_playlist = ConfigSectionMap("GENERAL")['error_playlist']
-    username = ConfigSectionMap("SPOTIPY")['user']
-    playlists = sp.user_playlists(username)
+    playlist_id = playlist_data[0]['Error Playlist ID']
+    toSpotPlaylist(sp, playlist_id, track_data) #filter tracks here?
     
     
-def toSnatchedPL():
+def toSnatchedPL(sp, track_data):
     ''' Albums which were matched successfully and/or queued
         will be moved to a new playlist
     '''
-    snatched_playlist = ConfigSectionMap("GENERAL")['snatched_playlist']
-    username = ConfigSectionMap("SPOTIPY")['user']
-    playlists = sp.user_playlists(username)
+    playlist_id = playlist_data[0]['Snatched Playlist ID']
+    toSpotPlaylist(sp, playlist_id, track_data) #filter tracks here?
     
 def main():
     sp = callSpotify()
     track_data = getSpotTracks(sp)
     track_data = checkHeadphones(track_data)
     queueAlbum(sp, track_data)
+    toSnatchedPL(sp, track_data)
+    toErrorPL(sp, track_data)
 
     '''
     ### TESTING ###
     #pp.pprint(hp_track_data)
-    print(playlist_data[0]['Playlist Name'])
-    print(playlist_data[0]['Playlist ID'])
+    print(playlist_data[0]['Wanted Playlist Name'])
+    print(playlist_data[0]['Wanted Playlist ID'])
     print("")
 
     for x in range(0,len(track_data)):
