@@ -10,7 +10,7 @@ import logging
 import ConfigParser
 
 Config = ConfigParser.ConfigParser()
-Config.read("config.ini")
+Config.read("dev/config.ini")
 logging.basicConfig(filename='SpotToPhones.log',level=logging.DEBUG)
 pp = pprint.PrettyPrinter(indent=4, depth=2)
 playlist_data = []
@@ -260,6 +260,12 @@ def remFromSpotPlaylist(sp, tracks):
     username = ConfigSectionMap("SPOTIPY")['user']
     playlist_id = playlist_data[0]['Playlist ID']
     remCommand = sp.user_playlist_remove_all_occurrences_of_tracks(username,playlist_id,tracks)
+
+def toErrorPL():
+    error_playlist = ConfigSectionMap("GENERAL")['error_playlist']
+
+def toSnatchedPL():
+    snatched_playlist = ConfigSectionMap("GENERAL")['snatched_playlist']
 
 def main():
     sp = callSpotify()
