@@ -73,7 +73,7 @@ def getSpotTracks(sp):
                 'Error Playlist Name': ConfigSectionMap("GENERAL")['error_playlist'],
                 'Error Playlist ID': playlist['id']
                 }
-        if playlist['name'] == ConfigSectionMap("GENERAL")['wanted_playlist']:
+        if playlist['name'] == ConfigSectionMap("GENERAL")['snatched_playlist']:
             pdata2 = {
                 'Snatched Playlist Name': ConfigSectionMap("GENERAL")['snatched_playlist'],
                 'Snatched Playlist ID': playlist['id']
@@ -318,6 +318,10 @@ def main():
     #pp.pprint(hp_track_data)
     print(playlist_data[0]['Wanted Playlist Name'])
     print(playlist_data[0]['Wanted Playlist ID'])
+    print(playlist_data[0]['Error Playlist Name'])
+    print(playlist_data[0]['Error Playlist ID'])
+    print(playlist_data[0]['Snatched Playlist Name'])
+    print(playlist_data[0]['Snatched Playlist ID'])
     print("")
 
     for x in range(0,len(track_data)):
@@ -329,5 +333,5 @@ def main():
         print("Track Test: ", track_data[x]['Track Test'])
         print("Track URI: ", track_data[x]['URI'])
         print("")
-    '''    
+    '''
 main()
