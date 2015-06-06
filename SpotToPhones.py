@@ -17,7 +17,7 @@ playlist_data = []
 
 
 def ConfigSectionMap(section):
-    ''' Return vars from config.ini to a dict object
+    ''' Return vars from config.ini to a dict object.
     '''
     dict1 = {}
     options = Config.options(section)
@@ -36,7 +36,7 @@ def ConfigSectionMap(section):
 hp_api = "http://" + ConfigSectionMap("HEADPHONES")['ip'] + ":" + ConfigSectionMap("HEADPHONES")['port'] +  ConfigSectionMap("HEADPHONES")['webroot'] + "/api"
 
 def callSpotify():
-    ''' Get and return Auth Token from Spotify for API calls
+    ''' Get and return Auth Token from Spotify for API calls.
     '''
     app_scope = ConfigSectionMap("SPOTIPY")['scope']
     username = ConfigSectionMap("SPOTIPY")['user']
@@ -53,8 +53,8 @@ def callSpotify():
         sys.exit()
 
 def getSpotTracks(sp):
-    ''' Get playlist tracks' artist and album information
-        Returns a dict object with all tracks' information
+    ''' Get playlist tracks' artist and album information.
+        Returns a dict object with all tracks' information.
     '''
     username = ConfigSectionMap("SPOTIPY")['user']
     playlists = sp.user_playlists(username)
@@ -113,8 +113,8 @@ def callHeadphones(req):
     return result
 
 def modHeadphones(req):
-    ''' Handles POST calls to Headphones API
-        Returns response 'OK' if successful
+    ''' Handles POST calls to Headphones API.
+        Returns response 'OK' if successful.
     '''
     global hp_api
     data = {'apikey': ConfigSectionMap("HEADPHONES")['api_key']}
@@ -132,9 +132,9 @@ def modHeadphones(req):
     return result.text
 
 def checkHeadphones(track_data):
-    ''' Calls Headphones API to check if tracks are present in library
-        Appends artist and/or album id's to track_data dict
-        If information is not found, will store string 'notfound'
+    ''' Calls Headphones API to check if tracks are present in library.
+        Appends artist and/or album id's to track_data dict.
+        If information is not found, will store string 'notfound'.
     '''
     req = {'cmd': 'getIndex'}
     hp_index = callHeadphones(req)
@@ -186,9 +186,9 @@ def checkHeadphones(track_data):
     return track_data
 
 def getMusicbrainzArtistID(sp_artist_name):
-    ''' Queries Headphone's API Musicbrainz query method to get Musicbrainz artist id
-        Returns Musicbrainz artist id
-        if unable to acquire, returns string 'notfound'
+    ''' Queries Headphone's API Musicbrainz query method to get Musicbrainz artist id.
+        Returns Musicbrainz artist id.
+        if unable to acquire, returns string 'notfound'.
     '''
     hp_artist_id = ''
     req = {'cmd': 'findArtist', 'name': sp_artist_name, 'limit': 10}
@@ -213,9 +213,9 @@ def getMusicbrainzArtistID(sp_artist_name):
     return hp_artist_id
 
 def getMusicbrainzAlbumID(hp_artist_id, sp_album_name):
-    ''' Queries Headphone's API Musicbrainz query method to get Musicbrainz album id
-        Returns Musicbrainz album id
-        if unable to acquire, returns string 'notfound'
+    ''' Queries Headphone's API Musicbrainz query method to get Musicbrainz album id.
+        Returns Musicbrainz album id.
+        if unable to acquire, returns string 'notfound'.
     '''
     hp_album_id = ''
     req = {'cmd': 'findAlbum', 'name': sp_album_name, 'limit': 15}
@@ -238,8 +238,8 @@ def getMusicbrainzAlbumID(hp_artist_id, sp_album_name):
     return hp_album_id
 
 def queueAlbum(sp, hp_track_data):
-    ''' Request tracks' album is downloaded by calling Headphones API
-        If artist id and/or album id is string 'notfound', does nothing 
+    ''' Request tracks' album is downloaded by calling Headphones API.
+        If artist id and/or album id is string 'notfound', does nothing. 
     '''
     snatchedTracks = []
     errorTracks = []
@@ -278,7 +278,7 @@ def queueAlbum(sp, hp_track_data):
     addToErrorPL(sp, errorTracks)
     
 def remFromSpotPlaylist(sp, tracks):
-    ''' Calls on Spotify API to remove track from wanted_playlist if download requested
+    ''' Calls on Spotify API to remove tracks from wanted_playlist if download requested
         Method does not give option to choose what playlist to remove from, possibly in future if needed.
     '''
     username = ConfigSectionMap("SPOTIPY")['user']
@@ -286,15 +286,15 @@ def remFromSpotPlaylist(sp, tracks):
     remCall = sp.user_playlist_remove_all_occurrences_of_tracks(username,playlist_id,tracks)
 
 def addToSpotPlaylist(sp, playlist_id, tracks):
-    #   results = sp.user_playlist_add_tracks(username, playlist_id, track_ids)
-    #   doc: user_playlist_add_tracks(user, playlist_id, tracks, position=None)
-    #   tracks is a LIST of track id's
+    ''' Calls on Spotify API to add tracks to a playlist.
+        Playlist is specified by arg:playlist_id when called.
+    '''
     username = ConfigSectionMap("SPOTIPY")['user']
     addCall = sp.user_playlist_add_tracks(username, playlist_id, tracks)
     
 def addToErrorPL(sp, tracks):
     ''' Albums which were not matched successfully and/or not queued
-        will be moved to a new playlist
+        will be moved to a new playlist.
     '''
     playlist_id = playlist_data[0]['Error Playlist ID']
     addToSpotPlaylist(sp, playlist_id, tracks)
@@ -302,7 +302,7 @@ def addToErrorPL(sp, tracks):
     
 def addToSnatchedPL(sp, tracks):
     ''' Albums which were matched successfully and/or queued
-        will be moved to a new playlist
+        will be moved to a new playlist.
     '''
     playlist_id = playlist_data[0]['Snatched Playlist ID']
     addToSpotPlaylist(sp, playlist_id, tracks)
