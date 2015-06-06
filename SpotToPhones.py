@@ -10,7 +10,7 @@ import logging
 import ConfigParser
 
 Config = ConfigParser.ConfigParser()
-Config.read("dev/config.ini")
+Config.read("config.ini")
 logging.basicConfig(filename='SpotToPhones.log',level=logging.DEBUG)
 pp = pprint.PrettyPrinter(indent=4, depth=2)
 playlist_data = []
