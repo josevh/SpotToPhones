@@ -63,28 +63,28 @@ def getSpotTracks(sp):
     playlist_found_test = 0
     for playlist in playlists['items']:
         #Get playlist id's of all our playlists in one go
-        if playlist['name'] == playlist_name:
-            pdata = {
-                'Wanted Playlist Name': playlist_name,
-                'Wanted Playlist ID': playlist['id']
-                }
         if playlist['name'] == ConfigSectionMap("GENERAL")['error_playlist']:
             pdata1 = {
                 'Error Playlist Name': ConfigSectionMap("GENERAL")['error_playlist'],
                 'Error Playlist ID': playlist['id']
                 }
+            playlist_data.append(pdata1)
         if playlist['name'] == ConfigSectionMap("GENERAL")['snatched_playlist']:
             pdata2 = {
                 'Snatched Playlist Name': ConfigSectionMap("GENERAL")['snatched_playlist'],
                 'Snatched Playlist ID': playlist['id']
                 }
-            playlist_data.append(pdata)
-            playlist_data.append(pdata1)
             playlist_data.append(pdata2)
+        if playlist['name'] == playlist_name:
+            pdata = {
+                'Wanted Playlist Name': playlist_name,
+                'Wanted Playlist ID': playlist['id']
+                }
+            playlist_data.append(pdata)
             tracks = sp.user_playlist(username, playlist['id'], fields="tracks")
             playlist_found_test = 1
             break
-
+        
     if playlist_found_test == 0:
         logging.debug("Did not find playlist.")
         sys.exit()
