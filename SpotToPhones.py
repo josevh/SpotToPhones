@@ -259,14 +259,36 @@ def remFromSpotPlaylist(sp, tracks):
     '''
     username = ConfigSectionMap("SPOTIPY")['user']
     playlist_id = playlist_data[0]['Playlist ID']
-    remCommand = sp.user_playlist_remove_all_occurrences_of_tracks(username,playlist_id,tracks)
+    remCall = sp.user_playlist_remove_all_occurrences_of_tracks(username,playlist_id,tracks)
 
+def toSpotPlaylist(sp, playlist, tracks):
+    #   results = sp.user_playlist_add_tracks(username, playlist_id, track_ids)
+    #   doc: user_playlist_add_tracks(user, playlist_id, tracks, position=None)
+    #   tracks is a LIST of track id's
+    username = ConfigSectionMap("SPOTIPY")['user']
+    playlists = sp.user_playlists(username)
+    for pl in playlists['items']:
+        if pl['name'] == playlist_name:
+            pl_id = pl['id']
+    addCall = sp.user_playlist_add_tracks(username, pl_id, tracks)
+    
 def toErrorPL():
+    ''' Albums which were not matched successfully and/or not queued
+        will be moved to a new playlist
+    '''
     error_playlist = ConfigSectionMap("GENERAL")['error_playlist']
-
+    username = ConfigSectionMap("SPOTIPY")['user']
+    playlists = sp.user_playlists(username)
+    
+    
 def toSnatchedPL():
+    ''' Albums which were matched successfully and/or queued
+        will be moved to a new playlist
+    '''
     snatched_playlist = ConfigSectionMap("GENERAL")['snatched_playlist']
-
+    username = ConfigSectionMap("SPOTIPY")['user']
+    playlists = sp.user_playlists(username)
+    
 def main():
     sp = callSpotify()
     track_data = getSpotTracks(sp)
