@@ -61,6 +61,7 @@ def getSpotTracks(sp):
     playlist_name = ConfigSectionMap("GENERAL")['wanted_playlist']
 
     playlist_found_test = 0
+    playlist_found_count = 0
     for playlist in playlists['items']:
         #Get playlist id's of all our playlists in one go
         if playlist['name'] == ConfigSectionMap("GENERAL")['error_playlist']:
@@ -69,20 +70,24 @@ def getSpotTracks(sp):
                 'Error Playlist ID': playlist['id']
                 }
             playlist_data.append(pdata1)
+            playlist_found_count += 1
         if playlist['name'] == ConfigSectionMap("GENERAL")['snatched_playlist']:
             pdata2 = {
                 'Snatched Playlist Name': ConfigSectionMap("GENERAL")['snatched_playlist'],
                 'Snatched Playlist ID': playlist['id']
                 }
             playlist_data.append(pdata2)
+            playlist_found_count += 1
         if playlist['name'] == playlist_name:
             pdata = {
                 'Wanted Playlist Name': playlist_name,
                 'Wanted Playlist ID': playlist['id']
                 }
             playlist_data.append(pdata)
+            playlist_found_count += 1
             tracks = sp.user_playlist(username, playlist['id'], fields="tracks")
             playlist_found_test = 1
+        if playlist_found_count >= 3: #dup playlist names allowed?
             break
         
     if playlist_found_test == 0:
@@ -334,4 +339,5 @@ def main():
         print("Track URI: ", track_data[x]['URI'])
         print("")
     '''
+    
 main()
