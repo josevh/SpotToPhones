@@ -241,16 +241,17 @@ def queueAlbum(sp, hp_track_data):
     ''' Request tracks' album is downloaded by calling Headphones API
         If artist id and/or album id is string 'notfound', does nothing 
     '''
-    remTracks = []
+    snatchedTracks = []
+    errorTracks = []
     for x in range(0,len(hp_track_data)):
         if hp_track_data[x]['Track Test'] == "found":
-            remTracks.append(hp_track_data[0]['URI'])
+            snatchedTracks.append(hp_track_data[x]['URI'])
             # already have artist, album, track. End.
             # remove from playlist, do not queue
         elif hp_track_data[x]['Artist ID'] == "notfound" or hp_track_data[x]['Album ID'] == "notfound":
-            pass
+            errorTracks.append(hp_track_data[x]['URI'])
             # could not locate artist id or album id on musicbrainz, try again next time
-            # or will have to be downloaded manually
+            # or will have to be downloaded manually, or add song from diff album release
         else:
             # add artist to headphones db
             req = {'cmd': 'addArtist', 'id': hp_track_data[x]['Artist ID']}
@@ -264,37 +265,47 @@ def queueAlbum(sp, hp_track_data):
                     req = {'cmd': 'queueAlbum', 'id': hp_track_data[x]['Album ID']}
                     queue = modHeadphones(req)
                     if queue == 'OK':
-                        remTracks.append(hp_track_data[0]['URI'])
-    remFromSpotPlaylist(sp, remTracks)
-
+                        snatchedTracks.append(hp_track_data[x]['URI'])
+                    else:
+                        logging.debug("queueAlbum for " + hp_track_data[x]['Album'] + " by " + hp_track_data[x]['Artist'] + "not successful.")
+                else:
+                    logging.debug("addAlbum for " + hp_track_data[x]['Album'] + " by " + hp_track_data[x]['Artist'] + "not successful.")
+            else:
+                logging.debug("addArtist for " + hp_track_data[x]['Album'] + " by " + hp_track_data[x]['Artist'] + "not successful.")
+                        
+    remFromSpotPlaylist(sp, snatchedTracks) #does not specify playlist id
+    addToSnatchedPL(sp, snatchedTracks)
+    addToErrorPL(sp, errorTracks)
+    
 def remFromSpotPlaylist(sp, tracks):
-    ''' Calls on Spotify API to remove track from playlist if download requested
+    ''' Calls on Spotify API to remove track from wanted_playlist if download requested
+        Method does not give option to choose what playlist to remove from, possibly in future if needed.
     '''
     username = ConfigSectionMap("SPOTIPY")['user']
     playlist_id = playlist_data[0]['Wanted Playlist ID']
     remCall = sp.user_playlist_remove_all_occurrences_of_tracks(username,playlist_id,tracks)
 
-def toSpotPlaylist(sp, playlist_id, tracks):
+def addToSpotPlaylist(sp, playlist_id, tracks):
     #   results = sp.user_playlist_add_tracks(username, playlist_id, track_ids)
     #   doc: user_playlist_add_tracks(user, playlist_id, tracks, position=None)
     #   tracks is a LIST of track id's
     username = ConfigSectionMap("SPOTIPY")['user']
     addCall = sp.user_playlist_add_tracks(username, playlist_id, tracks)
     
-def toErrorPL(sp, track_data):
+def addToErrorPL(sp, tracks):
     ''' Albums which were not matched successfully and/or not queued
         will be moved to a new playlist
     '''
     playlist_id = playlist_data[0]['Error Playlist ID']
-    toSpotPlaylist(sp, playlist_id, track_data) #filter tracks here?
+    addToSpotPlaylist(sp, playlist_id, tracks)
     
     
-def toSnatchedPL(sp, track_data):
+def addToSnatchedPL(sp, tracks):
     ''' Albums which were matched successfully and/or queued
         will be moved to a new playlist
     '''
     playlist_id = playlist_data[0]['Snatched Playlist ID']
-    toSpotPlaylist(sp, playlist_id, track_data) #filter tracks here?
+    addToSpotPlaylist(sp, playlist_id, tracks)
     
 def main():
     sp = callSpotify()
