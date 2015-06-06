@@ -1,7 +1,3 @@
 *.cache-overthinkingme
-SpotToPhones.log
-HPhonesAPI.py
-
-dev/APITest.py
-dev/config.ini
-dev/return.txt
+*.log
+dev/*
