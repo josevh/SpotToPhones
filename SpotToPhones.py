@@ -312,8 +312,6 @@ def main():
     track_data = getSpotTracks(sp)
     track_data = checkHeadphones(track_data)
     queueAlbum(sp, track_data)
-    toSnatchedPL(sp, track_data)
-    toErrorPL(sp, track_data)
 
     '''
     ### TESTING ###
