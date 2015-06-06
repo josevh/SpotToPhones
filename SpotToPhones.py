@@ -58,7 +58,7 @@ def getSpotTracks(sp):
     '''
     username = ConfigSectionMap("SPOTIPY")['user']
     playlists = sp.user_playlists(username)
-    playlist_name = ConfigSectionMap("GENERAL")['playlist_name']
+    playlist_name = ConfigSectionMap("GENERAL")['wanted_playlist']
 
     playlist_found_test = 0
     for playlist in playlists['items']:
