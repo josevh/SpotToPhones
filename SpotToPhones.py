@@ -62,38 +62,36 @@ def getSpotTracks(sp):
 
     wanted_playlist_found_test = 0
     playlist_found_count = 0
+    pdata = {}
     for playlist in playlists['items']:
         #Get playlist id's of all our playlists in one go
         if playlist['name'] == ConfigSectionMap("GENERAL")['error_playlist']:
-            pdata1 = {
-                'Error Playlist Name': ConfigSectionMap("GENERAL")['error_playlist'],
-                'Error Playlist ID': playlist['id']
-                }
-            playlist_data.append(pdata1)
+            pdata['Error Playlist Name'] = ConfigSectionMap("GENERAL")['error_playlist']
+            pdata['Error Playlist ID'] = playlist['id']
             playlist_found_count += 1
         if playlist['name'] == ConfigSectionMap("GENERAL")['snatched_playlist']:
-            pdata2 = {
-                'Snatched Playlist Name': ConfigSectionMap("GENERAL")['snatched_playlist'],
-                'Snatched Playlist ID': playlist['id']
-                }
-            playlist_data.append(pdata2)
+            pdata['Snatched Playlist Name'] = ConfigSectionMap("GENERAL")['snatched_playlist']
+            pdata['Snatched Playlist ID'] = playlist['id']
             playlist_found_count += 1
         if playlist['name'] == playlist_name:
-            pdata = {
-                'Wanted Playlist Name': playlist_name,
-                'Wanted Playlist ID': playlist['id']
-                }
-            playlist_data.append(pdata)
+            pdata['Wanted Playlist Name'] = playlist_name
+            pdata['Wanted Playlist ID'] = playlist['id']
             playlist_found_count += 1
-            tracks = sp.user_playlist(username, playlist['id'], fields="tracks")
             wanted_playlist_found_test = 1
         if playlist_found_count >= 3: #dup playlist names allowed?
             break
         
+    playlist_data.append(pdata)
+    tracks = sp.user_playlist(username, pdata['Wanted Playlist ID'], fields="tracks")
+        
     if wanted_playlist_found_test == 0:
-        logging.debug("Did not find playlist.")
+        logging.debug("Did not find wanted playlist.")
         sys.exit()
-
+        
+    if playlist_found_count < 3:
+        logging.debug("Did not find one of snatched or error playlists.")
+        sys.exit()
+        
     track_data = []
 
     for track in tracks['tracks']['items']:
@@ -280,6 +278,7 @@ def queueAlbum(sp, hp_track_data):
                         
     remFromSpotPlaylist(sp, snatchedTracks) #does not specify playlist id
     addToSnatchedPL(sp, snatchedTracks)
+    remFromSpotPlaylist(sp, errorTracks)
     addToErrorPL(sp, errorTracks)
     
 def remFromSpotPlaylist(sp, tracks):
