@@ -83,27 +83,31 @@ def getSpotTracks(sp):
         
     playlist_data.append(pdata)
     tracks = sp.user_playlist(username, pdata['Wanted Playlist ID'], fields="tracks")
-        
-    if wanted_playlist_found_test == 0:
-        logging.debug("Did not find wanted playlist.")
-        sys.exit()
-        
-    if playlist_found_count < 3:
-        logging.debug("Did not find one of snatched or error playlists.")
-        sys.exit()
-        
-    track_data = []
+    
+    if tracks['tracks']['total'] == 0:
+      logging.info("Playlist was empty.")
+      sys.exit()
+    else:
+      if wanted_playlist_found_test == 0:
+          logging.debug("Did not find wanted playlist.")
+          sys.exit()
 
-    for track in tracks['tracks']['items']:
-        data = {
-            'Artist': track['track']['artists'][0]['name'],
-            'Album': track['track']['album']['name'],
-            'Track': track['track']['name'],
-            'URI': track['track']['uri'],
-            }
-        track_data.append(data)
+      if playlist_found_count < 3:
+          logging.debug("Did not find one of snatched or error playlists.")
+          sys.exit()
 
-    return track_data
+      track_data = []
+
+      for track in tracks['tracks']['items']:
+          data = {
+              'Artist': track['track']['artists'][0]['name'],
+              'Album': track['track']['album']['name'],
+              'Track': track['track']['name'],
+              'URI': track['track']['uri'],
+              }
+          track_data.append(data)
+
+      return track_data
 
 def callHeadphones(req):
     global hp_api
@@ -270,16 +274,18 @@ def queueAlbum(sp, hp_track_data):
                     if queue == 'OK':
                         snatchedTracks.append(hp_track_data[x]['URI'])
                     else:
-                        logging.debug("queueAlbum for " + hp_track_data[x]['Album'] + " by " + hp_track_data[x]['Artist'] + "not successful.")
+                        logging.debug("queueAlbum for " + hp_track_data[x]['Album'] + " by " + hp_track_data[x]['Artist'] + " not successful.")
                 else:
-                    logging.debug("addAlbum for " + hp_track_data[x]['Album'] + " by " + hp_track_data[x]['Artist'] + "not successful.")
+                    logging.debug("addAlbum for " + hp_track_data[x]['Album'] + " by " + hp_track_data[x]['Artist'] + " not successful.")
             else:
-                logging.debug("addArtist for " + hp_track_data[x]['Album'] + " by " + hp_track_data[x]['Artist'] + "not successful.")
-                        
-    remFromSpotPlaylist(sp, snatchedTracks) #does not specify playlist id
-    addToSnatchedPL(sp, snatchedTracks)
-    remFromSpotPlaylist(sp, errorTracks)
-    addToErrorPL(sp, errorTracks)
+                logging.debug("addArtist for " + hp_track_data[x]['Album'] + " by " + hp_track_data[x]['Artist'] + " not successful.")
+    
+    if len(snatchedTracks) > 0:
+      remFromSpotPlaylist(sp, snatchedTracks)
+      addToSnatchedPL(sp, snatchedTracks)
+    if len(errorTracks) > 0:
+      remFromSpotPlaylist(sp, errorTracks)
+      addToErrorPL(sp, errorTracks)
     
 def remFromSpotPlaylist(sp, tracks):
     ''' Calls on Spotify API to remove tracks from wanted_playlist if download requested
