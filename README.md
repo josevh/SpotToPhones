@@ -8,7 +8,7 @@
 <br><br>
 <b>Status:</b> <b>WIP</b>
 <ul>
-  <li>Functioning, needs improvement in getting artist id from Musicbrainz.</li>
+  <li>Functioning, needs performance improvement.</li>
 </ul>  
 <br>
 <b>Todo:</b>
