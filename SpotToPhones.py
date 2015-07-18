@@ -184,7 +184,6 @@ def checkHeadphones():
             track_data[i]['Album ID'] = hp_album_id
             track_data[i]['Track Test'] = hp_track_test
         else:   # headphones library is empty
-            # hp_artist_id = getMusicbrainzArtistID(spArtist)
             hp_artist_id = spArtistMBID
             hp_album_id = getMusicbrainzAlbumID(hp_artist_id, spAlbum)
             hp_track_test = "notfound"
@@ -205,33 +204,6 @@ def getArtistMBID(artistSPID):
         return mbid[19:]    #remove 'musicbrainz:artist:'
     else:
         return 'notfound'
-
-def getMusicbrainzArtistID(sp_artist_name):
-    ''' Queries Headphone's API Musicbrainz query method to get Musicbrainz artist id.
-        Returns Musicbrainz artist id.
-        if unable to acquire, returns string 'notfound'.
-    '''
-    hp_artist_id = ''
-    req = {'cmd': 'findArtist', 'name': sp_artist_name, 'limit': 10}
-    count = 0
-    while True: # retry connection if failed, until successful or 5 tries
-        count += 1
-        artistQuery = callHeadphones(req)
-        if isinstance(artistQuery, list):
-            break
-        if count > 5:
-            hp_artist_id = "notfound"
-            break
-    if hp_artist_id != "notfound":
-        for artist in artistQuery:
-            # cannot reliably verify artist name matches
-            # probs: order of lname & fname; identically named artists with score 100, for ex. 'Lorde'
-            if artist['score'] > 90:
-                hp_artist_id = artist['id']
-                break
-            else:
-                hp_artist_id = "notfound"
-    return hp_artist_id
 
 def getMusicbrainzAlbumID(hp_artist_id, sp_album_name):
     ''' Queries Headphone's API Musicbrainz query method to get Musicbrainz album id.
