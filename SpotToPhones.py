@@ -193,6 +193,8 @@ def checkHeadphones():
     # return track_data
 
 def getArtistMBID(artistSPID):
+    ''' Use EchoNest API to map Spotify artist id to Musicbrainz artist id
+    '''
     en = pyen.Pyen(ConfigSectionMap("ECHONEST")['api_key'])
     params = {
         'id':       'spotify:artist:' + artistSPID,
