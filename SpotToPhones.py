@@ -309,7 +309,7 @@ def main():
     checkHeadphones()
     queueAlbum(sp)
 
-
+    '''
     ### TESTING ###
     #pp.pprint(track_data)
     print(playlist_data[0]['Wanted Playlist Name'])
@@ -329,11 +329,11 @@ def main():
         print("Track Test: ", track_data[x]['Track Test'])
         print("Track URI: ", track_data[x]['URI'])
         print("")
-
+    '''
 
 ''' global vars '''
 Config = ConfigParser.ConfigParser()
-Config.read("dev/config.ini")
+Config.read("config.ini")
 logging.basicConfig(filename='SpotToPhones.log',level=logging.DEBUG)
 pp = pprint.PrettyPrinter(indent=4, depth=2)
 playlist_data = []
