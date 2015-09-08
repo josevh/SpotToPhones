@@ -16,6 +16,8 @@ class Track(object):
         
         have_track:         A boolean representing whether the track is in Headphones library.
         have_album:         A boolean representing whether the track's album is in Headphones library.
+        
+        dl_request_status:  A string representing the outcome of adding album to Headphones queue.
     """
 
     def __init__(self, name, album, artist, uri, sp_uri, sp_id, sp_album_id, sp_artist_id):
