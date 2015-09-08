@@ -23,7 +23,7 @@ Thanks for reading!
 
 <b>REQUIREMENTS:</b>
 <ol>
-  <li><a href="http://docs.python-requests.org/en/latest/user/install/">Spotipy</a></li>
-  <li><a href="http://spotipy.readthedocs.org/en/latest/#installation">Requests</a></li>
+  <li><a href="http://docs.python-requests.org/en/latest/user/install/">Requests</a></li>
+  <li><a href="http://spotipy.readthedocs.org/en/latest/#installation">Spotipy</a></li>
   <li><a href="https://github.com/plamere/pyen">Pyen</a></li>
 </ol>
