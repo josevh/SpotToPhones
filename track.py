@@ -29,8 +29,8 @@ class Track(object):
         self.sp_artist_id   = sp_artist_id
         
     def getMB_id(self, spotify_id):
-        # code
-    def getMB_album_id(self, spotify_id):
-        # code
+        # necessary?
+    def getMB_album_id(self, mb_artist_id, album):
+        # query Headphones api
     def getMB_artist_id(self, spotify_id):
-        # code
+        # query pyen
