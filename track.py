@@ -35,16 +35,16 @@ class Track(object):
         
         self.config             = config
         
-        self.mb_artist_id       = self._get_mb_artist_id()
+        self.mb_artist_id       = self.__get_mb_artist_id()
         #self.mb_id              = None
-        self.mb_album_id        = self._get_mb_album_id()
+        self.mb_album_id        = self.__get_mb_album_id()
         
         self.have_track         = None
         self.have_album         = None
         
         self.dl_request_status  = None
         
-    def _get_mb_artist_id(self):
+    def __get_mb_artist_id(self):
         ''' Use EchoNest API to map Spotify artist id to Musicbrainz artist id
         '''
         config = self.config
@@ -60,7 +60,7 @@ class Track(object):
         else:
             return 'notfound'
 
-    def _get_mb_album_id(self):
+    def __get_mb_album_id(self):
         ''' Queries Headphone's API Musicbrainz query method to get Musicbrainz album id.
             Returns Musicbrainz album id.
             if unable to acquire, returns string 'notfound'.
