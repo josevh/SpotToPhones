@@ -8,7 +8,7 @@ import requests
 import pprint
 import logging
 import ConfigParser
-import pyen
+
 
 def ConfigSectionMap(section):
     ''' Return vars from config.ini to a dict object.
@@ -99,14 +99,6 @@ def getSpotTracks():
         track_data.append(data)
     # return track_data
 
-def callHeadphones(req):
-    data = { 'apikey': ConfigSectionMap("HEADPHONES")['api_key'] }
-    payload = {}
-    for item in (data, req):
-        payload.update(item)
-    result = requests.get(hp_api, params=payload)
-    result = result.json()
-    return result
 
 def modHeadphones(req):
     ''' Handles POST calls to Headphones API.
@@ -191,31 +183,6 @@ def checkHeadphones():
             track_data[i]['Album ID'] = hp_album_id
             track_data[i]['Track Test'] = hp_track_test
     # return track_data
-
-def getMusicbrainzAlbumID(hp_artist_id, sp_album_name):
-    ''' Queries Headphone's API Musicbrainz query method to get Musicbrainz album id.
-        Returns Musicbrainz album id.
-        if unable to acquire, returns string 'notfound'.
-    '''
-    hp_album_id = ''
-    req = {'cmd': 'findAlbum', 'name': sp_album_name, 'limit': 15}
-    count = 0
-    while True: # retry connection if failed, until successful or 5 tries
-        count += 1
-        albumQuery = callHeadphones(req)
-        if isinstance(albumQuery, list):
-            break
-        if count > 5:
-            hp_album_id = "notfound"
-            break
-    if hp_album_id != "notfound":
-        for album in albumQuery:
-           if album['id'] == hp_artist_id and (album['title']).lower() == (sp_album_name).lower():  #ignore case
-               hp_album_id = album['rgid']  #Headphones prefers the release group id
-               break
-           else:
-               hp_album_id = "notfound"
-    return hp_album_id
 
 def queueAlbum(sp):
     global track_data

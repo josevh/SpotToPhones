@@ -1,3 +1,5 @@
+import pyen
+
 class Track(object):
     """Tracks have the following attributes:
     
@@ -41,8 +43,7 @@ class Track(object):
         
     def __getMB_id(self, sp_id):
         # necessary?
-    def __getMB_album_id(self, mb_artist_id, album):
-        # query Headphones api
+        
     def __getMB_artist_id(self, sp_id):
         ''' Use EchoNest API to map Spotify artist id to Musicbrainz artist id
         '''
@@ -57,3 +58,37 @@ class Track(object):
             return mbid[19:]    #remove 'musicbrainz:artist:'
         else:
             return 'notfound'
+            
+    def __getMB_album_id(self, mb_artist_id, album_name):
+        ''' Queries Headphone's API Musicbrainz query method to get Musicbrainz album id.
+        Returns Musicbrainz album id.
+        if unable to acquire, returns string 'notfound'.
+        '''
+        req = {'cmd': 'findAlbum', 'name': album_name, 'limit': 15}
+        count = 0
+        while True: # retry connection if failed, until successful or 5 tries
+            count += 1
+            albumQuery = self.__callHeadphones(req)
+            if isinstance(albumQuery, list):
+                break
+            if count > 5:
+                mb_album_id = "notfound"
+                break
+        if mb_album_id != "notfound":
+            for album in albumQuery:
+               if album['id'] == mb_artist_id and (album['title']).lower() == (album_name).lower():  #ignore case
+                   mb_album_id = album['rgid']  #Headphones prefers the release group id
+                   break
+               else:
+                   mb_album_id = "notfound"
+        return mb_album_id
+    
+    def __callHeadphones(req):
+        #TODO find a way to pass config maybe into constructor
+        data = { 'apikey': ConfigSectionMap("HEADPHONES")['api_key'] }
+        payload = {}
+        for item in (data, req):
+            payload.update(item)
+        result = requests.get(hp_api, params=payload)
+        result = result.json()
+        return result
