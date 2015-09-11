@@ -192,21 +192,6 @@ def checkHeadphones():
             track_data[i]['Track Test'] = hp_track_test
     # return track_data
 
-def getArtistMBID(artistSPID):
-    ''' Use EchoNest API to map Spotify artist id to Musicbrainz artist id
-    '''
-    en = pyen.Pyen(ConfigSectionMap("ECHONEST")['api_key'])
-    params = {
-        'id':       'spotify:artist:' + artistSPID,
-        'bucket':   ['id:musicbrainz'],
-    }
-    response = en.get('artist/profile', **params)
-    if (response['status']['message'] == 'Success'):
-        mbid = response['artist']['foreign_ids'][0]['foreign_id']
-        return mbid[19:]    #remove 'musicbrainz:artist:'
-    else:
-        return 'notfound'
-
 def getMusicbrainzAlbumID(hp_artist_id, sp_album_name):
     ''' Queries Headphone's API Musicbrainz query method to get Musicbrainz album id.
         Returns Musicbrainz album id.

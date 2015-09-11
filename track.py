@@ -30,18 +30,30 @@ class Track(object):
         self.sp_album_id        = sp_album_id
         self.sp_artist_id       = sp_artist_id
         
-        self.mb_id              = self.getMB_id(sp_id)
-        self.mb_album_id        = self.getMB_album_id(mb_artist_id, album)
-        self.mb_artist_id       = self.getMB_artist_id(sp_id)
+        self.mb_id              = self.__getMB_id(sp_id)
+        self.mb_album_id        = self.__getMB_album_id(mb_artist_id, album)
+        self.mb_artist_id       = self.__getMB_artist_id(sp_id)
         
         self.have_track         = False
         self.have_album         = False
         
         self.dl_request_status  = ""
         
-    def getMB_id(self, sp_id):
+    def __getMB_id(self, sp_id):
         # necessary?
-    def getMB_album_id(self, mb_artist_id, album):
+    def __getMB_album_id(self, mb_artist_id, album):
         # query Headphones api
-    def getMB_artist_id(self, sp_id):
-        # query pyen
+    def __getMB_artist_id(self, sp_id):
+        ''' Use EchoNest API to map Spotify artist id to Musicbrainz artist id
+        '''
+        en = pyen.Pyen(ConfigSectionMap("ECHONEST")['api_key'])
+        params = {
+            'id':       'spotify:artist:' + artistSPID,
+            'bucket':   ['id:musicbrainz'],
+        }
+        response = en.get('artist/profile', **params)
+        if (response['status']['message'] == 'Success'):
+            mbid = response['artist']['foreign_ids'][0]['foreign_id']
+            return mbid[19:]    #remove 'musicbrainz:artist:'
+        else:
+            return 'notfound'
