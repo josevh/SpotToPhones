@@ -1,5 +1,6 @@
 import pyen
 import requests
+import pprint
 
 class Track(object):
     '''Tracks have the following attributes:
@@ -42,7 +43,7 @@ class Track(object):
         self.have_track         = None
         self.have_album         = None
         
-        self.dl_request_status  = None
+        self.dl_request_status  = None  # OK, ERROR, FAIL
         
     def __get_mb_artist_id(self):
         ''' Use EchoNest API to map Spotify artist id to Musicbrainz artist id
@@ -54,7 +55,7 @@ class Track(object):
             'bucket':   ['id:musicbrainz'],
         }
         response = en.get('artist/profile', **params)
-        if (response['status']['message'] == 'Success'):
+        if (response['status']['message'] == 'Success' and 'foreign_ids' in response['artist']):        #some artists will not return foreign id
             mbid = response['artist']['foreign_ids'][0]['foreign_id']
             return mbid[19:]    #remove 'musicbrainz:artist:'
         else:
@@ -65,24 +66,27 @@ class Track(object):
             Returns Musicbrainz album id.
             if unable to acquire, returns string 'notfound'.
         '''
-        req = {'cmd': 'findAlbum', 'name': self.name, 'limit': 15}
-        count = 0
-        hp_album_id = None
-        while True: # retry connection if failed, until successful or 5 tries
-            count += 1
-            albumQuery = self.__callHeadphones(req)
-            if isinstance(albumQuery, list):
-                break
-            if count > 5:
-                mb_album_id = "notfound"
-                break
-        if hp_album_id != "notfound":
-            for album in albumQuery:
-              if album['id'] == self.mb_artist_id and (album['title']).lower() == (self.name).lower():  #ignore case
-                  mb_album_id = album['rgid']  #Headphones prefers the release group id
-                  break
-              else:
-                  mb_album_id = "notfound"
+        mb_album_id = None
+        if self.mb_artist_id != "notfound":
+            req = {'cmd': 'findAlbum', 'name': self.name, 'limit': 15}
+            count = 0
+            while True: # retry connection if failed, until successful or 5 tries
+                count += 1
+                albumQuery = self.__callHeadphones(req)
+                if isinstance(albumQuery, list):
+                    break
+                if count > 5:
+                    mb_album_id = "notfound"
+                    break
+            if mb_album_id != "notfound":
+                for album in albumQuery:
+                  if album['id'] == self.mb_artist_id and (album['title']).lower() == (self.name).lower():  #ignore case
+                      mb_album_id = album['rgid']  #Headphones prefers the release group id
+                      break
+                  else:
+                      mb_album_id = "notfound"
+        else:
+            mb_album_id = "notfound"
         return mb_album_id
     
     def __callHeadphones(self, req):
