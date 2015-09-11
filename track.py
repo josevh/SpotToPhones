@@ -1,5 +1,7 @@
+import pyen
+
 class Track(object):
-    """Tracks have the following attributes:
+    '''Tracks have the following attributes:
     
         name:               A string representing the track's name.
         album:              A string representing the track's album.
@@ -18,23 +20,42 @@ class Track(object):
         have_album:         A boolean representing whether the track's album is in Headphones library.
         
         dl_request_status:  A string representing the outcome of adding album to Headphones queue.
-    """
+    '''
 
-    def __init__(self, name, album, artist, uri, sp_uri, sp_id, sp_album_id, sp_artist_id):
-        self.name               = name
-        self.album              = album
-        self.artist             = artist
+    def __init__(self, data, config):
+        self.name               = data['name']
+        self.album              = data['album']
+        self.artist             = data['artist']
         
-        self.sp_uri             = sp_uri
-        self.sp_id              = sp_id
-        self.sp_album_id        = sp_album_id
-        self.sp_artist_id       = sp_artist_id
+        self.sp_uri             = data['sp_uri']
+        self.sp_id              = data['sp_id']
+        self.sp_album_id        = data['sp_album_id']
+        self.sp_artist_id       = data['sp_artist_id']
         
+        self.config             = config
+        
+        self.mb_artist_id       = self._get_mb_artist_id(self.sp_artist_id)
         self.mb_id              = None
         self.mb_album_id        = None
-        self.mb_artist_id       = None
         
         self.have_track         = None
         self.have_album         = None
         
         self.dl_request_status  = None
+        
+    def _get_mb_artist_id(self, sp_artist_id):
+        ''' Use EchoNest API to map Spotify artist id to Musicbrainz artist id
+        '''
+        config = self.config
+        en = pyen.Pyen(config.get('ECHONEST', 'api_key'))
+        params = {
+            'id':       'spotify:artist:' + sp_artist_id,
+            'bucket':   ['id:musicbrainz'],
+        }
+        response = en.get('artist/profile', **params)
+        if (response['status']['message'] == 'Success'):
+            mbid = response['artist']['foreign_ids'][0]['foreign_id']
+            return mbid[19:]    #remove 'musicbrainz:artist:'
+        else:
+            return 'notfound'
+
