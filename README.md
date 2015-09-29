@@ -3,12 +3,15 @@
 <b>Goal:</b>
 <br>
   A program that will connect to Spotify and read tracks in a playlist of your choice.
-  The program will then connect to your Headphones server and see if you already have that track and album.
+  The program will then connect to your Headphones server and see if you already have that artist and album.
   If not, will download album and remove track from Spotify playlist.
+  
+  If it cannot, it will place the track on a playlist you designate.
 <br><br>
 <b>Status:</b> <b>WIP</b>
 <ul>
   <li>Functioning, needs performance improvement.</li>
+  <li>In process of rewriting.</li>
 </ul>  
 <br>
 <b>Todo:</b>
