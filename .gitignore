@@ -1,3 +1,4 @@
 *.cache-overthinkingme
 *.log
+*.pyc
 dev/*
