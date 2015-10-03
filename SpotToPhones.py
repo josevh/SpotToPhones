@@ -1,65 +1,25 @@
-from __future__ import absolute_import
-from __future__ import print_function
-import ssl
-import sys
+import ConfigParser
 import spotipy
 import spotipy.util as util
-import requests
-import pprint
-import logging
-import ConfigParser
-import pyen
+from track import Track
 
-def ConfigSectionMap(section):
-    ''' Return vars from config.ini to a dict object.
-    '''
-    dict1 = {}
-    options = Config.options(section)
-    for option in options:
-        try:
-            dict1[option] = Config.get(section, option)
-            if dict1[option] == -1:
-                DebugPrint("skip: %s" % option)
-        except:
-            logging.debug("Exception on %s!" % option)
-            dict1[option] = None
-    return dict1
-
-def callSpotify():
-    ''' Get and return Auth Token from Spotify for API calls.
-    '''
-    app_scope = ConfigSectionMap("SPOTIPY")['scope']
-    token = util.prompt_for_user_token(username, scope=app_scope,
-    client_id=ConfigSectionMap("SPOTIPY")['spotify_client_id'],
-    client_secret=ConfigSectionMap("SPOTIPY")['spotify_client_secret'],
-    redirect_uri=ConfigSectionMap("SPOTIPY")['spotify_redirect_uri'])
-
-    if token:
-        sp = spotipy.Spotify(auth=token)
-        return sp
-    else:
-        logging.debug("Can't get token for " + username)
-        sys.exit()
-
-def getSpotPlaylist():
-    global playlist_data
-    playlist_name = ConfigSectionMap("GENERAL")['wanted_playlist']
-    playlists = sp.user_playlists(username)
+def getSpotPlaylists():
+    playlists = sp.user_playlists(config.get('SPOTIPY', 'user'))
     wanted_playlist_found_test = 0
     playlist_found_count = 0
     pdata = {}
     for playlist in playlists['items']:
         #Get playlist id's of all our playlists in one go
-        if playlist['name'] == ConfigSectionMap("GENERAL")['error_playlist']:
-            pdata['Error Playlist Name'] = ConfigSectionMap("GENERAL")['error_playlist']
+        if playlist['name'] == config.get('GENERAL', 'error_playlist'):
+            pdata['Error Playlist Name'] = config.get('GENERAL', 'error_playlist')
             pdata['Error Playlist ID'] = playlist['id']
             playlist_found_count += 1
-        if playlist['name'] == ConfigSectionMap("GENERAL")['snatched_playlist']:
-            pdata['Snatched Playlist Name'] = ConfigSectionMap("GENERAL")['snatched_playlist']
+        if playlist['name'] == config.get('GENERAL', 'snatched_playlist'):
+            pdata['Snatched Playlist Name'] = config.get('GENERAL', 'snatched_playlist')
             pdata['Snatched Playlist ID'] = playlist['id']
             playlist_found_count += 1
-        if playlist['name'] == playlist_name:
-            pdata['Wanted Playlist Name'] = playlist_name
+        if playlist['name'] == config.get('GENERAL', 'wanted_playlist'):
+            pdata['Wanted Playlist Name'] = config.get('GENERAL', 'wanted_playlist')
             pdata['Wanted Playlist ID'] = playlist['id']
             playlist_found_count += 1
             wanted_playlist_found_test = 1
@@ -71,275 +31,82 @@ def getSpotPlaylist():
     if playlist_found_count < 3:
         logging.debug("Did not find one of snatched or error playlists.")
         sys.exit()
-    playlist_data.append(pdata)
+    return pdata
 
-def getSpotTracks():
-    global track_data
+def getSpotTracks(playlist_id):
     ''' Get playlist tracks' artist and album information.
         Returns a dict object with all tracks' information.
     '''
-    getSpotPlaylist()
-    tracks = sp.user_playlist(username, playlist_data[0]['Wanted Playlist ID'], fields="tracks")
+    tracks = sp.user_playlist(config.get('SPOTIPY', 'user'), playlist_id, fields="tracks")
 
     if tracks['tracks']['total'] == 0:
         logging.info("Playlist was empty.")
         sys.exit()
-
+    
+    track_data = []
+    
     for track in tracks['tracks']['items']:
         data = {
-            'Artist': track['track']['artists'][0]['name'],
-            'Album': track['track']['album']['name'],
-            'Track': track['track']['name'],
-            'URI': track['track']['uri'],
-            'Artist SPID': track['track']['artists'][0]['id'],
-            'Artist MBID': getArtistMBID(track['track']['artists'][0]['id']),
-            'Album SPID': track['track']['album']['id'],
-            'Track SPID': track['track']['id'],
+            'artist': track['track']['artists'][0]['name'],
+            'album': track['track']['album']['name'],
+            'name': track['track']['name'],
+            'sp_uri': track['track']['uri'],
+            'sp_artist_id': track['track']['artists'][0]['id'],
+            'sp_album_id': track['track']['album']['id'],
+            'sp_id': track['track']['id'],
             }
         track_data.append(data)
-    # return track_data
-
-def callHeadphones(req):
-    data = { 'apikey': ConfigSectionMap("HEADPHONES")['api_key'] }
-    payload = {}
-    for item in (data, req):
-        payload.update(item)
-    result = requests.get(hp_api, params=payload)
-    result = result.json()
-    return result
-
-def modHeadphones(req):
-    ''' Handles POST calls to Headphones API.
-        Returns response 'OK' if successful.
+        
+    track_objs = [Track(data, config) for data in track_data]
+    return track_objs
+        
+def callSpotify():
+    ''' Get and return Auth Token from Spotify for API calls.
     '''
-    data = {'apikey': ConfigSectionMap("HEADPHONES")['api_key']}
-    payload = {}
-    for item in (data, req):
-        payload.update(item)
-    count = 0
-    while True:
-        result = requests.post(hp_api, params=payload)
-        if result.text == 'OK':
-            break
-        if count >= 1:
-            break
-        count += 1
-    return result.text
+    token = util.prompt_for_user_token(config.get('SPOTIPY', 'user'), scope= config.get('SPOTIPY', 'scope'),
+        client_id= config.get('SPOTIPY', 'spotify_client_id'),
+        client_secret= config.get('SPOTIPY', 'spotify_client_secret'),
+        redirect_uri= config.get('SPOTIPY', 'spotify_redirect_uri'))
 
-def checkHeadphones():
-    global track_data
-    ''' Calls Headphones API to check if tracks are present in library.
-        Appends artist and/or album id's to track_data dict.
-        If information is not found, will store string 'notfound'.
-    '''
-    req = {'cmd': 'getIndex'}
-    hp_index = callHeadphones(req)
-    for i in range(0,len(track_data)):
-        spArtist = track_data[i]['Artist']
-        spAlbum = track_data[i]['Album']
-        spTrack = track_data[i]['Track']
-        spArtistMBID = track_data[i]['Artist MBID']
-        if hp_index: # check if Headphones library is empty
-
-            # search for artist in library
-            for j in range(0,len(hp_index)):
-                if hp_index[j]['ArtistID'] == spArtistMBID:
-                    hp_artist_id = spArtistMBID
-
-                    # search for albums in Headphones library
-                    req ={'cmd': 'getArtist', 'id': spArtistMBID}
-                    hp_albums = callHeadphones(req)
-
-                    ## check if api returns albums
-                    if len(hp_albums['albums']) > 0:
-                        for k in range(0,len(hp_albums['albums'])):
-                            if hp_albums['albums'][k]['AlbumTitle'] == spAlbum:
-                                hp_album_id = hp_albums['albums'][k]['AlbumID']
-
-                                # search for track, Album is in library
-                                req = {'cmd': 'getAlbum', 'id': hp_album_id}
-                                hp_tracks = callHeadphones(req)
-                                if len(hp_tracks['tracks']) > 0:
-                                    for l in range(0,len(hp_tracks['tracks'])):
-                                        if hp_tracks['tracks'][l]['TrackTitle'] == spTrack:
-                                            hp_track_test = "found"
-                                            break
-                                        else:
-                                            hp_track_test = "notfound"
-                                    break
-                                else:
-                                    hp_track_test = "notfound"
-                            else:
-                                hp_album_id = getMusicbrainzAlbumID(hp_artist_id, spAlbum)
-                                hp_track_test = "notfound"
-                        break
-                    else:
-                        hp_album_id = getMusicbrainzAlbumID(hp_artist_id, spAlbum)
-                        hp_track_test = "notfound"
-                else:
-                    hp_artist_id = spArtistMBID
-                    hp_album_id = getMusicbrainzAlbumID(hp_artist_id, spAlbum)
-                    hp_track_test = "notfound"
-            track_data[i]['Artist ID'] = spArtistMBID
-            track_data[i]['Album ID'] = hp_album_id
-            track_data[i]['Track Test'] = hp_track_test
-        else:   # headphones library is empty
-            hp_artist_id = spArtistMBID
-            hp_album_id = getMusicbrainzAlbumID(hp_artist_id, spAlbum)
-            hp_track_test = "notfound"
-            track_data[i]['Artist ID'] = spArtistMBID
-            track_data[i]['Album ID'] = hp_album_id
-            track_data[i]['Track Test'] = hp_track_test
-    # return track_data
-
-def getArtistMBID(artistSPID):
-    ''' Use EchoNest API to map Spotify artist id to Musicbrainz artist id
-    '''
-    en = pyen.Pyen(ConfigSectionMap("ECHONEST")['api_key'])
-    params = {
-        'id':       'spotify:artist:' + artistSPID,
-        'bucket':   ['id:musicbrainz'],
-    }
-    response = en.get('artist/profile', **params)
-    if (response['status']['message'] == 'Success'):
-        mbid = response['artist']['foreign_ids'][0]['foreign_id']
-        return mbid[19:]    #remove 'musicbrainz:artist:'
+    if token:
+        sp = spotipy.Spotify(auth=token)
+        return sp
     else:
-        return 'notfound'
-
-def getMusicbrainzAlbumID(hp_artist_id, sp_album_name):
-    ''' Queries Headphone's API Musicbrainz query method to get Musicbrainz album id.
-        Returns Musicbrainz album id.
-        if unable to acquire, returns string 'notfound'.
-    '''
-    hp_album_id = ''
-    req = {'cmd': 'findAlbum', 'name': sp_album_name, 'limit': 15}
-    count = 0
-    while True: # retry connection if failed, until successful or 5 tries
-        count += 1
-        albumQuery = callHeadphones(req)
-        if isinstance(albumQuery, list):
-            break
-        if count > 5:
-            hp_album_id = "notfound"
-            break
-    if hp_album_id != "notfound":
-        for album in albumQuery:
-           if album['id'] == hp_artist_id and (album['title']).lower() == (sp_album_name).lower():  #ignore case
-               hp_album_id = album['rgid']  #Headphones prefers the release group id
-               break
-           else:
-               hp_album_id = "notfound"
-    return hp_album_id
-
-def queueAlbum(sp):
-    global track_data
-    ''' Request tracks' album is downloaded by calling Headphones API.
-        If artist id and/or album id is string 'notfound', does nothing.
-    '''
-    snatchedTracks = []
-    errorTracks = []
-    for x in range(0,len(track_data)):
-        if track_data[x]['Track Test'] == "found":
-            snatchedTracks.append(track_data[x]['URI'])
-            # already have artist, album, track. End.
-            # remove from playlist, do not queue
-        elif track_data[x]['Artist ID'] == "notfound" or track_data[x]['Album ID'] == "notfound":
-            errorTracks.append(track_data[x]['URI'])
-            # could not locate artist id or album id on musicbrainz, try again next time
-            # or will have to be downloaded manually, or add song from diff album release
-        else:
-            # add artist to headphones db
-            req = {'cmd': 'addArtist', 'id': track_data[x]['Artist ID']}
-            artistReq = modHeadphones(req)
-            if artistReq == 'OK':
-                # add album to headphones db
-                req = {'cmd': 'addAlbum', 'id': track_data[x]['Album ID']}
-                albumReq = modHeadphones(req)
-                if albumReq == 'OK':
-                    # request album be downloaded
-                    req = {'cmd': 'queueAlbum', 'id': track_data[x]['Album ID']}
-                    queue = modHeadphones(req)
-                    if queue == 'OK':
-                        snatchedTracks.append(track_data[x]['URI'])
-                    else:
-                        logging.debug("queueAlbum for " + track_data[x]['Album'] + " by " + track_data[x]['Artist'] + " not successful.")
-                else:
-                    logging.debug("addAlbum for " + track_data[x]['Album'] + " by " + track_data[x]['Artist'] + " not successful.")
-            else:
-                logging.debug("addArtist for " + track_data[x]['Album'] + " by " + track_data[x]['Artist'] + " not successful.")
-
-    if len(snatchedTracks) > 0:
-      remFromSpotPlaylist(sp, snatchedTracks)
-      addToSnatchedPL(sp, snatchedTracks)
-    if len(errorTracks) > 0:
-      remFromSpotPlaylist(sp, errorTracks)
-      addToErrorPL(sp, errorTracks)
-
-def remFromSpotPlaylist(sp, tracks):
-    ''' Calls on Spotify API to remove tracks from wanted_playlist if download requested
-        Method does not give option to choose what playlist to remove from, possibly in future if needed.
-    '''
-    playlist_id = playlist_data[0]['Wanted Playlist ID']
-    remCall = sp.user_playlist_remove_all_occurrences_of_tracks(username,playlist_id,tracks)
-
-def addToSpotPlaylist(sp, playlist_id, tracks):
-    ''' Calls on Spotify API to add tracks to a playlist.
-        Playlist is specified by arg:playlist_id when called.
-    '''
-    addCall = sp.user_playlist_add_tracks(username, playlist_id, tracks)
-
-def addToErrorPL(sp, tracks):
-    ''' Albums which were not matched successfully and/or not queued
-        will be moved to a new playlist.
-    '''
-    playlist_id = playlist_data[0]['Error Playlist ID']
-    addToSpotPlaylist(sp, playlist_id, tracks)
-
-
-def addToSnatchedPL(sp, tracks):
-    ''' Albums which were matched successfully and/or queued
-        will be moved to a new playlist.
-    '''
-    playlist_id = playlist_data[0]['Snatched Playlist ID']
-    addToSpotPlaylist(sp, playlist_id, tracks)
+        logging.debug("Can't get token for " + username)
+        sys.exit()
 
 def main():
-    getSpotTracks()
-    checkHeadphones()
-    queueAlbum(sp)
-
-    '''
-    ### TESTING ###
-    #pp.pprint(track_data)
-    print(playlist_data[0]['Wanted Playlist Name'])
-    print(playlist_data[0]['Wanted Playlist ID'])
-    print(playlist_data[0]['Error Playlist Name'])
-    print(playlist_data[0]['Error Playlist ID'])
-    print(playlist_data[0]['Snatched Playlist Name'])
-    print(playlist_data[0]['Snatched Playlist ID'])
-    print("")
-
-    for x in range(0,len(track_data)):
-        print("Artist: ", track_data[x]['Artist'])
-        # print("Artist ID: ", track_data[x]['Artist ID'])
-        print("Album: ", track_data[x]['Album'])
-        print("Album ID: ", track_data[x]['Album ID'])
-        print("Track: ", track_data[x]['Track'])
-        print("Track Test: ", track_data[x]['Track Test'])
-        print("Track URI: ", track_data[x]['URI'])
+    playlists = getSpotPlaylists()
+    tracks = getSpotTracks(playlists['Wanted Playlist ID'])
+    for track in tracks:
+        print("trackname: ", track.name)
+        print("track artist: ", track.artist)
+        print("mb artist id: ", track.mb_artist_id)
+        print("mb album id: ", track.mb_album_id)
+        if track.have_album:
+            print("have album: True")
+        else:
+            print("have album: False")
+        if track.have_artist:
+            print("have artist: True")
+        else:
+            print("have artist: False")
+        if track.queue_status:
+            print("queue status: True")
+        else:
+            print("queue status: False")
         print("")
-    '''
-
-''' global vars '''
-Config = ConfigParser.ConfigParser()
-Config.read("config.ini")
-logging.basicConfig(filename='SpotToPhones.log',level=logging.DEBUG)
-pp = pprint.PrettyPrinter(indent=4, depth=2)
-playlist_data = []
-track_data = []
-username = ConfigSectionMap("SPOTIPY")['user']
-hp_api = "http://" + ConfigSectionMap("HEADPHONES")['ip'] + ":" + ConfigSectionMap("HEADPHONES")['port'] +  ConfigSectionMap("HEADPHONES")['webroot'] + "/api"
+    
+    # get_mb_album_id("cc2c9c3c-b7bc-4b8b-84d8-4fbd8779e493", "21")
+    
+config = ConfigParser.ConfigParser()
+config.read("dev/config.ini")
 sp = callSpotify()
-
+    
 main()
+
+# TODO:
+#     -queue album is not working
+#     -move tracks to appropriate spotify playlists post process
+    
+    
