@@ -8,14 +8,15 @@
   
   If it cannot, it will place the track on a playlist you designate.
 <br><br>
-<b>Status:</b> <b>WIP</b>
+<b>Status:</b> WIP:<b>NOT WORKING</b>
 <ul>
-  <li>Functioning, needs performance improvement.</li>
+  <li>Method to queue track is not working, WIP.</li>
   <li>In process of rewriting.</li>
 </ul>  
 <br>
 <b>Todo:</b>
 <ul>
+    <li>Fix queue_album_in_hp class method</li>
     <li>Move tracks that cannot be found on MBz to another playlist for cases in which manual download will be required.</li>
 </ul>
 <br>
