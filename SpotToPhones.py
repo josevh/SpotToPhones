@@ -100,7 +100,7 @@ def main():
     # get_mb_album_id("cc2c9c3c-b7bc-4b8b-84d8-4fbd8779e493", "21")
     
 config = ConfigParser.ConfigParser()
-config.read("dev/config.ini")
+config.read("config.ini")
 sp = callSpotify()
     
 main()
