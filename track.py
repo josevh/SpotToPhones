@@ -1,6 +1,5 @@
 import pyen
 import requests
-import pprint
 
 class Track(object):
     '''Tracks have the following attributes:
@@ -20,8 +19,9 @@ class Track(object):
         
         have_track:         A boolean representing whether the track is in Headphones library.
         have_album:         A boolean representing whether the track's album is in Headphones library.
+        have_artist:        A boolean representing whether the artist is in Headphones library.
         
-        dl_request_status:  A string representing the outcome of adding album to Headphones queue.
+        queue_status:       A string representing the outcome of adding album to Headphones queue.
     '''
 
     def __init__(self, data, config):
@@ -40,10 +40,11 @@ class Track(object):
         #self.mb_id              = None
         self.mb_album_id        = self.__get_mb_album_id()
         
-        self.have_track         = None
-        self.have_album         = None
+        #self.have_track         = None
+        self.have_album         = self.__find_album_in_hp()
+        self.have_artist        = self.__find_artist_in_hp()
         
-        self.dl_request_status  = None  # OK, ERROR, FAIL
+        self.queue_status       = self.__queue_album_in_hp()
         
     def __get_mb_artist_id(self):
         ''' Use EchoNest API to map Spotify artist id to Musicbrainz artist id
@@ -68,7 +69,7 @@ class Track(object):
         '''
         mb_album_id = None
         if self.mb_artist_id != "notfound":
-            req = {'cmd': 'findAlbum', 'name': self.name, 'limit': 15}
+            req = {'cmd': 'findAlbum', 'name': self.album + ':' + self.artist, 'limit': 15}
             count = 0
             while True: # retry connection if failed, until successful or 5 tries
                 count += 1
@@ -80,7 +81,7 @@ class Track(object):
                     break
             if mb_album_id != "notfound":
                 for album in albumQuery:
-                  if album['id'] == self.mb_artist_id and (album['title']).lower() == (self.name).lower():  #ignore case
+                  if album['id'] == self.mb_artist_id and (album['title']).lower() == (self.album).lower() and album['rgtype'] == 'Album':  #ignore case
                       mb_album_id = album['rgid']  #Headphones prefers the release group id
                       break
                   else:
@@ -99,3 +100,76 @@ class Track(object):
         result = requests.get(hp_api, params=payload)
         result = result.json()
         return result
+        
+    def __modHeadphones(self, req):
+        ''' Handles POST calls to Headphones API.
+            Returns response 'OK' if successful.
+        '''
+        config = self.config
+        data = { 'apikey': config.get('HEADPHONES', 'api_key') }
+        payload = {}
+        for item in (data, req):
+            payload.update(item)
+        hp_api = "http://" + config.get('HEADPHONES', 'ip') + ":" + config.get('HEADPHONES', 'port') +  config.get('HEADPHONES', 'webroot') + "/api"
+        count = 0
+        while True:
+            if count > 3:
+                return False
+            result = requests.post(hp_api, params=payload)
+            if result.text == 'OK':
+                return True
+            count += 1
+        
+    def __find_artist_in_hp(self):
+        if self.mb_artist_id == "notfound":
+            return False
+        req = {'cmd': 'getIndex'}
+        library = self.__callHeadphones(req)
+        status = False
+        for item in library:
+            if item['ArtistID'] == self.mb_artist_id:
+                status = True
+                break
+        return status
+            
+    def __find_album_in_hp(self):
+        if self.mb_album_id == "notfound":
+            return False
+        req = {'cmd': 'getAlbum', 'id': self.mb_album_id}
+        check = self.__callHeadphones(req)
+        if len(check['album']) > 0:
+            return True
+        else:
+            return False
+            
+    def __add_artist_in_hp(self):
+        if self.mb_artist_id == "notfound":
+            return False
+        req = {'cmd': 'addArtist', 'id': self.mb_artist_id}
+        request = self.__modHeadphones(req)
+        if request == 'OK':
+            return True
+        else:
+            return False
+        
+    def __add_album_in_hp(self):
+        if self.mb_album_id == "notfound":
+            return False
+        req = {'cmd': 'addAlbum', 'id': self.mb_album_id}
+        request = self.__modHeadphones(req)
+        if request == 'OK':
+            return True
+        else:
+            return False
+            
+    def __queue_album_in_hp(self):
+        if (self.have_artist or self.__add_artist_in_hp()) and (self.have_album or self.__add_album_in_hp()):
+            # TODO: queue the album
+            req = {'cmd': 'queueAlbum', 'id': self.mb_album_id}
+            request = self.__modHeadphones(req)
+            if request == 'OK':
+                return True
+            else:
+                return False
+        else:
+            return False
