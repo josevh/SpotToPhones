@@ -24,7 +24,6 @@ Thanks for reading!
 * [Requests](http://docs.python-requests.org/en/latest/user/install/)
 * [Spotipy](http://spotipy.readthedocs.org/en/latest/#installation)
 * [Pyen](https://github.com/plamere/pyen)
-
 * Spotify developer account
 * Echonest developer account
 
