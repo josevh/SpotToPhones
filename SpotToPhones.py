@@ -72,35 +72,65 @@ def callSpotify():
         sp = spotipy.Spotify(auth=token)
         return sp
     else:
-        logging.debug("Can't get token for " + username)
+        logging.debug("Can't get token for " + config.get('SPOTIPY', 'user'))
         sys.exit()
+        
+def remFromSpotPlaylist(sp, tracks):
+    ''' Calls on Spotify API to remove tracks from wanted_playlist if download requested
+        Method does not give option to choose what playlist to remove from, possibly in future if needed.
+    '''
+    playlist_id = playlists['Wanted Playlist ID']
+    remCall = sp.user_playlist_remove_all_occurrences_of_tracks(config.get('SPOTIPY', 'user'),playlist_id,tracks)
+
+def addToSpotPlaylist(sp, playlist_id, tracks):
+    ''' Calls on Spotify API to add tracks to a playlist.
+        Playlist is specified by arg:playlist_id when called.
+    '''
+    sp.user_playlist_add_tracks(config.get('SPOTIPY', 'user'), playlist_id, tracks)
+
+def addToErrorPL(sp, tracks):
+    ''' Albums which were not matched successfully and/or not queued
+        will be moved to a new playlist.
+    '''
+    playlist_id = playlists['Error Playlist ID']
+    addToSpotPlaylist(sp, playlist_id, tracks)
+
+
+def addToSnatchedPL(sp, tracks):
+    ''' Albums which were matched successfully and/or queued
+        will be moved to a new playlist.
+    '''
+    playlist_id = playlists['Snatched Playlist ID']
+    addToSpotPlaylist(sp, playlist_id, tracks)
+
+
 
 def main():
-    playlists = getSpotPlaylists()
     tracks = getSpotTracks(playlists['Wanted Playlist ID'])
+    
+    snatchedTracks = []
+    errorTracks = []
     for track in tracks:
-        print("trackname: ", track.name)
-        print("track artist: ", track.artist)
-        print("mb artist id: ", track.mb_artist_id)
-        print("mb album id: ", track.mb_album_id)
-        if track.have_album:
-            print("have album: True")
-        else:
-            print("have album: False")
-        if track.have_artist:
-            print("have artist: True")
-        else:
-            print("have artist: False")
         if track.queue_status:
-            print("queue status: True")
+            snatchedTracks.append(track.sp_uri)
+            print "Moved " + track.name + " to snatched pl"
         else:
-            print("queue status: False")
-        print("")
+            errorTracks.append(track.sp_uri)
+            print "Moved " + track.name + " to error pl"
+            
+    if len(snatchedTracks) > 0:
+      remFromSpotPlaylist(sp, snatchedTracks)
+      addToSnatchedPL(sp, snatchedTracks)
+    if len(errorTracks) > 0:
+      remFromSpotPlaylist(sp, errorTracks)
+      addToErrorPL(sp, errorTracks)
+            
     
 config = ConfigParser.ConfigParser()
-config.read("dev/config.ini")
+config.read("config.ini")
 sp = callSpotify()
-    
+playlists = getSpotPlaylists()
+
 main()
 
 # TODO:
