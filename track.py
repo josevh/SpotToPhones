@@ -147,7 +147,7 @@ class Track(object):
             return False
         req = {'cmd': 'addArtist', 'id': self.mb_artist_id}
         request = self.__modHeadphones(req)
-        if request == 'OK':
+        if request:
             return True
         else:
             return False
@@ -157,7 +157,7 @@ class Track(object):
             return False
         req = {'cmd': 'addAlbum', 'id': self.mb_album_id}
         request = self.__modHeadphones(req)
-        if request == 'OK':
+        if request:
             return True
         else:
             return False
@@ -167,7 +167,7 @@ class Track(object):
             # TODO: queue the album
             req = {'cmd': 'queueAlbum', 'id': self.mb_album_id}
             request = self.__modHeadphones(req)
-            if request == 'OK':
+            if request:
                 return True
             else:
                 return False
