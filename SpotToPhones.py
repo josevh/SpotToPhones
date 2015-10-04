@@ -132,9 +132,3 @@ sp = callSpotify()
 playlists = getSpotPlaylists()
 
 main()
-
-# TODO:
-#     -queue album is not working
-#     -move tracks to appropriate spotify playlists post process
-    
-    
