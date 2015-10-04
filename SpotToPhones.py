@@ -113,10 +113,8 @@ def main():
     for track in tracks:
         if track.queue_status:
             snatchedTracks.append(track.sp_uri)
-            print "Moved " + track.name + " to snatched pl"
         else:
             errorTracks.append(track.sp_uri)
-            print "Moved " + track.name + " to error pl"
             
     if len(snatchedTracks) > 0:
       remFromSpotPlaylist(sp, snatchedTracks)
