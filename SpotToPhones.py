@@ -97,10 +97,8 @@ def main():
             print("queue status: False")
         print("")
     
-    # get_mb_album_id("cc2c9c3c-b7bc-4b8b-84d8-4fbd8779e493", "21")
-    
 config = ConfigParser.ConfigParser()
-config.read("config.ini")
+config.read("dev/config.ini")
 sp = callSpotify()
     
 main()
