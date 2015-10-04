@@ -9,7 +9,7 @@
 ## Status: **WIP**: PARTIALLY WORKING
 * Method to queue track is not 100% reliable, WIP.
 * In process of rewriting.
-* Works best with Headphones VIP Musicbrainz Mirro
+* Works best with Headphones VIP Musicbrainz Mirror
 
 ## Todo:
 * add logging
