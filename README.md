@@ -29,7 +29,7 @@ Thanks for reading!
 
 #### Setup Instructions
 1. clone repo
-2. edit **config.ini**
+2. rename **config.ini.example** to **config.ini** and edit
 	* GENERAL
 		* wanted_playlist
 			* (name of playlist which contains tracks desired)
