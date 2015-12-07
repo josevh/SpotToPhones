@@ -2,3 +2,4 @@
 *.log
 *.pyc
 dev/*
+config.ini
