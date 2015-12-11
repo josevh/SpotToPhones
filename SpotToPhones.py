@@ -1,6 +1,8 @@
 import ConfigParser
 import spotipy
 import spotipy.util as util
+import logging
+import sys
 from track import Track
 
 def getSpotPlaylists():
@@ -115,7 +117,7 @@ def main():
             snatchedTracks.append(track.sp_uri)
         else:
             errorTracks.append(track.sp_uri)
-            
+    print "Here"        
     if len(snatchedTracks) > 0:
       remFromSpotPlaylist(sp, snatchedTracks)
       addToSnatchedPL(sp, snatchedTracks)
@@ -126,6 +128,7 @@ def main():
     
 config = ConfigParser.ConfigParser()
 config.read("config.ini")
+logging.basicConfig(filename='SpotToPhones.log',level=logging.DEBUG)
 sp = callSpotify()
 playlists = getSpotPlaylists()
 
