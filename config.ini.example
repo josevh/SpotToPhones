@@ -2,22 +2,20 @@
 # for ex.:
 # playlist_name: Country
 
-[GENERAL]
+[SPOTIFY]
+username: {spotify username}
+scope: playlist-read-private playlist-modify-private
+client_id: {spotify app client id}
+client_secret: {spotify app client secret}
+redirect_uri: {spotify redirect uri}
 wanted_playlist: {playlist name}
 error_playlist: {playlist name}
-snatched_playlist: {playlist name}
-
-[SPOTIPY]
-scope: playlist-read-private playlist-modify-private
-user: {spotify username}
-spotify_client_id: {spotify app client id}
-spotify_client_secret: {spotify app client secret}
-spotify_redirect_uri: {spotify redirect uri}
+success_playlist: {playlist name}
 
 [HEADPHONES]
 ip: {headphones ip}
 port: {headphones port}
-webroot: {headphones webroot}
+webroot: {headphones webroot [include beginning forward slash]}
 api_key: {headphones API key}
 
 [ECHONEST]
