@@ -37,9 +37,9 @@ class Spotify(object):
         
         self.__get_playlist_mb_ids(hp_worker, self.working_playlists)
         
-        #self.__add_tracks_hp(hp_worker, self.playlist_wanted)
+        self.__add_tracks_hp(hp_worker, self.playlist_wanted)
         
-        #self.__playlist_move_tracks(self.playlist_wanted)
+        self.__playlist_move_tracks(self.playlist_wanted)
         
         #TODO: deleteme        
         for playlist in self.working_playlists:
@@ -292,12 +292,12 @@ class HeadphonesWorker(object):
         task3 = self.__queue_album(album_id_mb)
         time.sleep(3)
         return task1 and task2 and task3
-    
+        #TODO: test without sleep, calls to add tracks to hp already slow as is
         
     ###########################
     #       just added addArtist, addAlbum, addTrack; untested
     #       need to:
-    #           validate add?
+    #           validate add?   #might not be needed since queue_album return OK
     #           handle tracks that get moved to error but error is due to timeout, not not-found
     #       #TODO:'s
     #       logging
