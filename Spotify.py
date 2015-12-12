@@ -15,18 +15,16 @@ class Spotify(object):
         self.client_secret          = config.get('SPOTIFY', 'client_secret')
         self.redirect_uri           = config.get('SPOTIFY', 'redirect_uri')
         
+        self.working_playlists      = []
+        self.working_playlists.append(self.playlist_wanted)
+        self.working_playlists.append(self.playlist_success)
+        self.working_playlists.append(self.playlist_error)
+        
         self.sp = self.__get_token()
         self.playlists = self.__get_playlists()
-        self.__get_playlist_ids(
-            self.playlist_wanted,
-            self.playlist_error,
-            self.playlist_success
-        )
-        self.__get_playlist_tracks(
-            self.playlist_wanted,
-            self.playlist_error,
-            self.playlist_success
-        )
+        
+        self.__get_playlist_ids(self.working_playlists)
+        self.__get_playlist_tracks(self.working_playlists)
         
         hp_worker = HeadphonesWorker(
             config.get('HEADPHONES', 'ip'),
@@ -36,21 +34,20 @@ class Spotify(object):
             config.get('ECHONEST', 'api_key')
         )
         
-        self.__get_playlist_mb_ids(
-            hp_worker,
-            self.playlist_wanted,
-            self.playlist_error,
-            self.playlist_success
-        )
+        self.__get_playlist_mb_ids(hp_worker, self.working_playlists)
         
-        self.playlist_wanted._print()
-        print ""
-        for track in self.playlist_wanted.tracks:
-            #if track.valid_mb_ids():
-            track._print()
+        #self.__add_tracks_hp(hp_worker, self.playlist_wanted)
+        
+        #self.__playlist_move_tracks(self.playlist_wanted)
+        
+        #TODO: deleteme        
+        for playlist in self.working_playlists:
+            playlist._print()
+            for track in playlist.tracks:
+                #if track.valid_mb_ids():
+                track._print()
+                print ""
             print ""
-            break
-        print ""
 
 
     def __get_token(self):
@@ -67,13 +64,13 @@ class Spotify(object):
     def __get_playlists(self):
         return self.sp.user_playlists(self.username)
     
-    def __get_playlist_ids(self, *playlists):
+    def __get_playlist_ids(self, playlists):
         for playlist in playlists:
             for pl in self.playlists['items']:
                 if pl['name'] == playlist.name:
                     playlist.id = pl['id']
                 
-    def __get_playlist_tracks(self, *playlists):
+    def __get_playlist_tracks(self, playlists):
         for playlist in playlists:
             tracks = self.sp.user_playlist(self.username, playlist.id, fields="tracks")
             if len(tracks['tracks']['items']) > 0:
@@ -90,7 +87,7 @@ class Spotify(object):
                         )
                     )
 
-    def __get_playlist_mb_ids(self, hp_worker, *playlists):
+    def __get_playlist_mb_ids(self, hp_worker, playlists):
         for playlist in playlists:
             for track in playlist.tracks:
                 track.artist_id_mb = hp_worker.get_mb_artist_id(track.artist_id_sp)
@@ -101,8 +98,53 @@ class Spotify(object):
                     track.album_type
                 )
                 if track.valid_mb_ids():
-                    track.in_hp = hp_worker.in_hp(track.artist_id_mb, track.album_id_mb)
+                    track.artist_in_hp = hp_worker.artist_in_hp(track.artist_id_mb)
+                    track.album_in_hp = hp_worker.album_in_hp(track.album_id_mb)
+    def __add_tracks_hp(self, hp_worker, playlist):
+        for track in playlist.tracks:
+            if track.artist_in_hp and track.album_in_hp:
+                track.add_result    = True
+                continue
+            else:
+                if hp_worker.add_track(track.artist_id_mb, track.album_id_mb):
+                    track.add_result    = True
+                else:
+                    track.add_result    = False
+                    
+    def __playlist_rem_track(self, playlist_id, track_id):
+        ''' Calls on Spotify API to remove tracks from wanted_playlist if download requested
+            Method does not give option to choose what playlist to remove from, possibly in future if needed.
+        '''
+        self.sp.user_playlist_remove_all_occurrences_of_tracks(
+            self.username,
+            playlist_id,
+            track_id
+        )
 
+    def __playlist_add_track(self, playlist_id, track_id):
+        ''' Calls on Spotify API to add tracks to a playlist.
+            Playlist is specified by arg:playlist_id when called.
+        '''
+        self.sp.user_playlist_add_tracks(
+            self.username,
+            playlist_id,
+            track_id
+        )
+    def __playlist_move(self, track):
+        if track.add_result is None:      #not success, not error, pass
+            pass
+        elif track.add_result:            #True == success
+            self.__playlist_rem_track(self.playlist_wanted.id, track.id)
+            self.__playlist_add_track(self.playlist_success.id, track.id)
+        elif not track.add_result:        #False == error
+            self.__playlist_rem_track(self.playlist_wanted.id, track.id)
+            self.__playlist_add_track(self.playlist_error.id, track.id)
+        else:                       #else, what???
+            pass
+    def __playlist_move_tracks(self, playlist):
+        for track in playlist.tracks:
+            self.__playlist_move(track)
+            
 class Playlist(object):
     def __init__(self, name):
         self.name   = name
@@ -113,20 +155,23 @@ class Playlist(object):
         print "playlist id: " + self.id
         
 class Track(object):
-    def __init__(self, name, id, artist_name, artist_id, album_name, album_id, album_type):
+    def __init__(self, name, id, artist_name, artist_id_sp, album_name, album_id_sp, album_type):
         self.name           = name
         self.id_sp          = id
         
         self.artist_name    = artist_name
-        self.artist_id_sp   = artist_id
+        self.artist_id_sp   = artist_id_sp
         self.artist_id_mb   = ""
+        self.artist_in_hp   = None
         
         self.album_name     = album_name
-        self.album_id_sp    = album_id
+        self.album_id_sp    = album_id_sp
         self.album_id_mb    = ""
         self.album_type     = album_type
+        self.album_in_hp    = None
         
-        self.in_hp          = None
+        self.add_result     = None
+        
     def valid_mb_ids(self):
         return self.artist_id_mb is not None and self.album_id_mb is not None
     def _print(self):
@@ -137,8 +182,18 @@ class Track(object):
         print "track album name: " + self.album_name
         if self.album_id_mb is not None:
             print "track album mb id: " + self.album_id_mb
-        if self.in_hp:
-            print "track in hp: yes"
+        if self.artist_in_hp:
+            print "artist in hp: yes"
+        else:
+            print "artist in hp: no"
+        if self.album_in_hp:
+            print "album in hp: yes"
+        else:
+            print "album in hp: no"
+        if self.add_result:
+            print "track add result: ok"
+        else:
+            print "track add result: not ok"
         
 class HeadphonesWorker(object):
     def __init__(self, ip, port, webroot, api_key, echonest_api_key):
@@ -173,6 +228,7 @@ class HeadphonesWorker(object):
             if result.text == 'OK':
                 return True
             count += 1
+        return False
     def get_mb_artist_id(self, sp_artist_id):
         ''' Use EchoNest API to map Spotify artist id to Musicbrainz artist id
         '''
@@ -197,23 +253,43 @@ class HeadphonesWorker(object):
                 albumQuery = self.__get_headphones(req)
                 if isinstance(albumQuery, list):
                     for album in albumQuery:
-                        if album['id'] == artist_id_mb and (album['title']).lower() == (album_name).lower() and album['rgtype'] == album_type.title():  #ignore case
+                        if (
+                            album['id']             == artist_id_mb and
+                            album['title'].lower()  == (album_name).lower() and
+                            album['rgtype']         == album_type.title()
+                        ):  #ignore case
                             return album['rgid']  #Headphones prefers the release group id
                     break
                 if count > 5:
                     break
-    def __artist_in_hp(self, mb_artist_id):
+    def artist_in_hp(self, artist_id_mb):
         req = {'cmd': 'getIndex'}
         library = self.__get_headphones(req)
         status = False
         for item in library:
-            if item['ArtistID'] == mb_artist_id:
+            if item['ArtistID'] == artist_id_mb:
                 return True
         return False
-    def __album_in_hp(self, mb_album_id):
-        req = {'cmd': 'getAlbum', 'id': mb_album_id}
+    def album_in_hp(self, album_id_mb):
+        req = {'cmd': 'getAlbum', 'id': album_id_mb}
         check = self.__get_headphones(req)
         return len(check['album']) > 0
-    def in_hp(self, mb_artist_id, mb_album_id):
-        return (self.__artist_in_hp(mb_artist_id) and self.__album_in_hp(mb_album_id))
-            
+    def __add_artist(self, artist_id_mb):
+        req = {'cmd': 'addArtist', 'id': artist_id_mb}
+        return self.__post_headphones(req)
+    def __add_album(self, album_id_mb):
+        req = {'cmd': 'addAlbum', 'id': album_id_mb}
+        return self.__post_headphones(req)
+    def add_track(self, artist_id_mb, album_id_mb):
+            return self.__add_artist(artist_id_mb) and self.__add_album(album_id_mb)
+        
+        
+    ###########################
+    #       just added addArtist, addAlbum, addTrack; untested
+    #       need to:
+    #           validate add?
+    #           handle tracks that get moved to error but error is due to timeout, not not-found
+    #       #TODO:'s
+    #       logging
+    #       google music??
+        
