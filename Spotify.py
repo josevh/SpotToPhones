@@ -2,6 +2,7 @@ import spotipy
 import spotipy.util as util
 import pyen
 import requests
+import time                 #used for pause in add_track method
 
 class Spotify(object):
     def __init__(self, config):
@@ -284,7 +285,13 @@ class HeadphonesWorker(object):
         req = {'cmd': 'queueAlbum', 'id': album_id_mb}
         return self.__post_headphones(req)
     def add_track(self, artist_id_mb, album_id_mb):
-            return self.__add_artist(artist_id_mb) and self.__add_album(album_id_mb) and self.__queue_album(album_id_mb)
+        task1 = self.__add_artist(artist_id_mb)
+        time.sleep(3)
+        task2 = self.__add_album(album_id_mb)
+        time.sleep(3)
+        task3 = self.__queue_album(album_id_mb)
+        time.sleep(3)
+        return task1 and task2 and task3
     
         
     ###########################
