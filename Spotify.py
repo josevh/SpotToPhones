@@ -280,9 +280,12 @@ class HeadphonesWorker(object):
     def __add_album(self, album_id_mb):
         req = {'cmd': 'addAlbum', 'id': album_id_mb}
         return self.__post_headphones(req)
+    def __queue_album(self, album_id_mb):
+        req = {'cmd': 'queueAlbum', 'id': album_id_mb}
+        return self.__post_headphones(req)
     def add_track(self, artist_id_mb, album_id_mb):
-            return self.__add_artist(artist_id_mb) and self.__add_album(album_id_mb)
-        
+            return self.__add_artist(artist_id_mb) and self.__add_album(album_id_mb) and self.__queue_album(album_id_mb)
+    
         
     ###########################
     #       just added addArtist, addAlbum, addTrack; untested
