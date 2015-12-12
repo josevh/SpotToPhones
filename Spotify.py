@@ -246,7 +246,7 @@ class HeadphonesWorker(object):
             Returns Musicbrainz album id.
         '''
         if artist_id_mb:
-            req = {'cmd': 'findAlbum', 'name': album_name + ':' + artist_name, 'limit': 5}
+            req = {'cmd': 'findAlbum', 'name': album_name + ':' + artist_name, 'limit': 10}
             count = 0
             while True: # retry connection if failed, until successful or 5 tries
                 count += 1
@@ -257,7 +257,7 @@ class HeadphonesWorker(object):
                             album['id']             == artist_id_mb and
                             album['title'].lower()  == (album_name).lower() and
                             album['rgtype']         == album_type.title()
-                        ):  #ignore case
+                        ):
                             return album['rgid']  #Headphones prefers the release group id
                     break
                 if count > 5:
