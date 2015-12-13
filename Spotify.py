@@ -24,33 +24,6 @@ class Spotify(object):
         self.sp = self.__get_token()
         self.playlists = self.__get_playlists()
         
-        self.__get_playlist_ids(self.working_playlists)
-        self.__get_playlist_tracks(self.working_playlists)
-        
-        hp_worker = HeadphonesWorker(
-            config.get('HEADPHONES', 'ip'),
-            config.get('HEADPHONES', 'port'),
-            config.get('HEADPHONES', 'webroot'),
-            config.get('HEADPHONES', 'api_key'),
-            config.get('ECHONEST', 'api_key')
-        )
-        
-        self.__get_playlist_mb_ids(hp_worker, self.working_playlists)
-        
-        self.__add_tracks_hp(hp_worker, self.playlist_wanted)
-        
-        self.__playlist_move_tracks(self.playlist_wanted)
-        
-        #TODO: deleteme        
-        for playlist in self.working_playlists:
-            playlist._print()
-            for track in playlist.tracks:
-                #if track.valid_mb_ids():
-                track._print()
-                print ""
-            print ""
-
-
     def __get_token(self):
         token = util.prompt_for_user_token(
             self.username,
@@ -65,13 +38,13 @@ class Spotify(object):
     def __get_playlists(self):
         return self.sp.user_playlists(self.username)
     
-    def __get_playlist_ids(self, playlists):
+    def get_playlist_ids(self, playlists):
         for playlist in playlists:
             for pl in self.playlists['items']:
                 if pl['name'] == playlist.name:
                     playlist.id = pl['id']
                 
-    def __get_playlist_tracks(self, playlists):
+    def get_playlist_tracks(self, playlists):
         for playlist in playlists:
             tracks = self.sp.user_playlist(self.username, playlist.id, fields="tracks")
             if len(tracks['tracks']['items']) > 0:
@@ -88,7 +61,7 @@ class Spotify(object):
                         )
                     )
 
-    def __get_playlist_mb_ids(self, hp_worker, playlists):
+    def get_playlist_mb_ids(self, hp_worker, playlists):
         for playlist in playlists:
             for track in playlist.tracks:
                 track.artist_id_mb = hp_worker.get_mb_artist_id(track.artist_id_sp)
