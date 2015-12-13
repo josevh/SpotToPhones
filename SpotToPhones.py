@@ -1,13 +1,14 @@
 import ConfigParser
-from Spotify import Spotify
-from Spotify import HeadphonesWorker
+from Helpers import Spotify
+from Helpers import Headphones
+from Helpers import Playlist
 
 def main():
     config = ConfigParser.ConfigParser()
     config.read("config.ini")
     sp = Spotify(config)
     
-    hp_worker = HeadphonesWorker(
+    hp_worker = Headphones(
             config.get('HEADPHONES', 'ip'),
             config.get('HEADPHONES', 'port'),
             config.get('HEADPHONES', 'webroot'),
@@ -16,21 +17,31 @@ def main():
         )
     
     sp.get_playlist_ids(sp.working_playlists)
-    sp.get_playlist_tracks(sp.working_playlists)
     
-    sp.get_playlist_mb_ids(hp_worker, sp.working_playlists)
+    if sp.get_playlist_tracks(sp.working_playlists):
+        sp.get_playlist_mb_ids(hp_worker, sp.working_playlists)
+        sp.add_tracks_hp(hp_worker, sp.playlist_wanted)
+        sp.playlist_move_tracks(sp.playlist_wanted)
         
-    #sp.__add_tracks_hp(hp_worker, sp.playlist_wanted)
-    
-    #sp.__playlist_move_tracks(sp.playlist_wanted)
-    
-    #TODO: deleteme        
-    for playlist in sp.working_playlists:
-        playlist._print()
-        for track in playlist.tracks:
-            #if track.valid_mb_ids():
-            track._print()
-            print ""
-        print ""
+        #TODO: deleteme        
+        # for playlist in sp.working_playlists:
+        #     playlist._print()
+        #     print ""
+        #     for track in playlist.tracks:
+        #         #if track.valid_mb_ids():
+        #         track._print()
+        #         print ""
+        #     print ""
 
 if __name__ == "__main__": main()
+
+###########################################################################
+#       just added addArtist, addAlbum, addTrack; untested
+#       need to:
+#           validate add?   #might not be needed since queue_album return OK
+#           handle tracks that get moved to error but error is due to timeout, not not-found
+#           send spotify requests to add/del from playlist tracks in bulk
+#       #TODO:'s
+#       logging
+#       google music??
+        
