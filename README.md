@@ -16,6 +16,7 @@
 * create documentation/setup tutorial
 * handle tracks with error due to musicbrainz timeout rather than not-found
 * send bulk request to move tracks in Spotify playlists
+* slowest method is adding/queueing in Headphones, needs research.
 
 Open to any suggestions. First real GitHub project for me.
 Forgive the sloppy code, still learning.
