@@ -116,21 +116,24 @@ class Spotify(object):
         ''' Calls on Spotify API to remove tracks from wanted_playlist if download requested
             Method does not give option to choose what playlist to remove from, possibly in future if needed.
         '''
+        tracks = [track_id]
         self.sp.user_playlist_remove_all_occurrences_of_tracks(
             self.username,
             playlist_id,
-            track_id
+            tracks
         )
 
     def __playlist_add_track(self, playlist_id, track_id):
         ''' Calls on Spotify API to add tracks to a playlist.
             Playlist is specified by arg:playlist_id when called.
         '''
+        tracks = [track_id]
         self.sp.user_playlist_add_tracks(
             self.username,
             playlist_id,
-            track_id
+            tracks
         )
+    
     def __playlist_move(self, track):
         if track.add_result is None:      #not success, not error, pass
             pass
@@ -158,7 +161,7 @@ class Playlist(object):
 class Track(object):
     def __init__(self, name, id, artist_name, artist_id_sp, album_name, album_id_sp, album_type):
         self.name           = name
-        self.id_sp          = id
+        self.id             = id
         
         self.artist_name    = artist_name
         self.artist_id_sp   = artist_id_sp
@@ -299,6 +302,7 @@ class HeadphonesWorker(object):
     #       need to:
     #           validate add?   #might not be needed since queue_album return OK
     #           handle tracks that get moved to error but error is due to timeout, not not-found
+    #           send spotify requests to add/del from playlist tracks in bulk
     #       #TODO:'s
     #       logging
     #       google music??
