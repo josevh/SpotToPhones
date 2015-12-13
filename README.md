@@ -30,24 +30,23 @@ Thanks for reading!
 #### Setup Instructions
 1. clone repo
 2. rename **config.ini.example** to **config.ini** and edit
-	* GENERAL
+	* SPOTIFY
+	* user
+			* (Spotify username)
+		* scope
+			* (already set, allows SpotToPhones to access your playlists and their data)
+		* client_id
+			* (Spotify client id, provided at Spotify developer portal)
+		* client_secret
+			* (Spotify client secret, provided at Spotify developer portal)
+		* redirect_uri
+			* (Spotify redirect uri, provided at Spotify developer portal)
 		* wanted_playlist
 			* (name of playlist which contains tracks desired)
 		* error_playlist
 			* (name of playlist where tracks will be moved to on failed attempt to add to Headphones)
-		* snatched_playlist
+		* success_playlist
 			* (name of playlist where tracks will be moved to on successful attempt to add to Headphones)
-	* SPOTIPY
-		* scope
-			* (already set, allows SpotToPhones to access your playlists and their data)
-		* user
-			* (Spotify username)
-		* spotify_client_id
-			* (Spotify client id, provided at Spotify developer portal)
-		* spotify_client_secret
-			* (Spotify client secret, provided at Spotify developer portal)
-		* spotify_redirect_uri
-			* (Spotify redirect uri, provided at Spotify developer portal)
 	* HEADPHONES
 		* ip
 		* port
