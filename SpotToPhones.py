@@ -34,14 +34,4 @@ def main():
         #     print ""
 
 if __name__ == "__main__": main()
-
-###########################################################################
-#       need to:
-#           validate add?   #might not be needed since queue_album return OK
-#           handle tracks that get moved to error but error is due to timeout, not not-found
-#           send spotify requests to add/del from playlist tracks in bulk
-#           #TODO:'s
-#           logging
-#           method docs
-#           google music??
         

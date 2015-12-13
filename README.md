@@ -6,14 +6,16 @@
   If not, will download album and remove track from Spotify playlist.
   If it cannot, it will place the track on a playlist you designate.
   
-## Status: REWRITE IN PROGRESS; NOT WORKING
-* Method to queue track is not 100% reliable, WIP.
-* In process of rewriting.
+## Status: WORKING!
+* In process of REWRITING.
 * Works best with Headphones VIP Musicbrainz Mirror
 
 ## Todo:
 * add logging
+* add method docs
 * create documentation/setup tutorial
+* handle tracks with error due to musicbrainz timeout rather than not-found
+* send bulk request to move tracks in Spotify playlists
 
 Open to any suggestions. First real GitHub project for me.
 Forgive the sloppy code, still learning.
