@@ -43,6 +43,7 @@ Thanks for reading!
 			* (Spotify client secret, provided at Spotify developer portal)
 		* redirect_uri
 			* (Spotify redirect uri, provided at Spotify developer portal)
+			  * (can be localhost:8000 or whatever, it does not have to be visited, only pasted into terminal)
 		* wanted_playlist
 			* (name of playlist which contains tracks desired)
 		* error_playlist
