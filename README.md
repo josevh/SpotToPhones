@@ -51,7 +51,7 @@ Thanks for reading!
 			  * (name of playlist where tracks will be moved to on failed attempt to add to Headphones)
 		  * success_playlist
 			  * (name of playlist where tracks will be moved to on successful attempt to add to Headphones)
-	 * HEADPHONES
+	* HEADPHONES
 		* ip
 		* port
 		* webroot
