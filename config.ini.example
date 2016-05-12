@@ -1,6 +1,5 @@
-# replace bracketed entries with your specific information
-# for ex.:
-# playlist_name: Country
+# This config requires YOUR OWN dev account information
+# for Spotify and Echonest
 
 [SPOTIFY]
 username: spotify-username
