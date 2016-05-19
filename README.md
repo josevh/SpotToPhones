@@ -5,10 +5,10 @@
   The program will then connect to your Headphones server and see if you already have that artist and album.
   If not, will download album and remove track from Spotify playlist.
   If it cannot, it will place the track on a playlist you designate.
-  
-## Status: WORKING!
-* In process of REWRITING.
-* Works best with Headphones VIP Musicbrainz Mirror
+
+## Status: BROKEN
+* Broken due to closure of Echonest API [link](https://developer.spotify.com/news-stories/2016/03/29/api-improvements-update/)
+* Will have no time to fix before May 31st due to school and work schedule
 
 ## Todo:
 * add logging
@@ -29,6 +29,7 @@ Thanks for reading!
 * [Pyen](https://github.com/plamere/pyen)
 * Spotify developer account
 * Echonest developer account
+* Works best with Headphones VIP Musicbrainz Mirror
 
 #### Setup Instructions
 1. clone repo
