@@ -6,17 +6,9 @@
   If not, will download album and remove track from Spotify playlist.
   If it cannot, it will place the track on a playlist you designate.
 
-## Status: **OBSOLETE**
+## Status: OBSOLETE
 * Broken due to closure of Echonest API [link](https://developer.spotify.com/news-stories/2016/03/29/api-improvements-update/)
 * No easy way to map Spotify IDs to Musicbrainz IDs.
-
-## Todo:
-* add logging
-* add method docs
-* create documentation/setup tutorial
-* handle tracks with error due to musicbrainz timeout rather than not-found
-* send bulk request to move tracks in Spotify playlists
-* slowest method is adding/queueing in Headphones, needs research.
 
 Open to any suggestions. First real GitHub project for me.
 Forgive the sloppy code, still learning.
