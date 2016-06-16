@@ -6,9 +6,9 @@
   If not, will download album and remove track from Spotify playlist.
   If it cannot, it will place the track on a playlist you designate.
 
-## Status: BROKEN
+## Status: **OBSOLETE**
 * Broken due to closure of Echonest API [link](https://developer.spotify.com/news-stories/2016/03/29/api-improvements-update/)
-* Will have no time to fix before May 31st due to school and work schedule
+* No easy way to map Spotify IDs to Musicbrainz IDs.
 
 ## Todo:
 * add logging
